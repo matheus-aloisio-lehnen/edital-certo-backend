@@ -1,0 +1,48 @@
+{
+    "email": {
+        "base": {
+            "title": "Edital Certo | Notification"
+        },
+        "confirmPwdReset": {
+            "subject": "Password updated successfully",
+            "title": "Password updated successfully",
+            "greeting": "Hi {userName}, your password has been successfully updated.",
+            "warning": "Don't recognize this activity? Please contact our support team.",
+            "cta": "Access the system"
+        },
+        "confirmWinback": {
+            "subject": "Account successfully reactivated",
+            "title": "Account successfully reactivated",
+            "greeting": "Welcome back, {userName}!",
+            "content": "We've missed you.",
+            "cta": "Access the system"
+        },
+        "requestEmailOtp": {
+            "subject": "Email confirmation",
+            "title": "Email confirmation",
+            "greeting": "Hi, {name}!",
+            "instruction": "Use the code below to confirm your email. It expires in {ttl}.",
+            "footer": "Enter this code on the screen to complete the confirmation.",
+            "warning": "If you didn't request this code, please ignore this email.",
+            "cta": "Access the system"
+        },
+        "requestPwdReset": {
+            "subject": "Password reset",
+            "title": "Password reset",
+            "greeting": "Hi {userName}, we received a request to reset your password.",
+            "instruction": "To continue, click the button below:",
+            "warning": "If you didn't request a reset, please ignore this email. The link expires in {ttl}.",
+            "support": "If you're having trouble, please contact support.",
+            "cta": "Reset password"
+        },
+        "requestWinback": {
+            "subject": "Account reactivation",
+            "title": "Account reactivation",
+            "greeting": "Hi {userName}, we received a request to reactivate your account.",
+            "instruction": "To continue, click the button below and complete the reactivation:",
+            "warning": "If you didn't request reactivation, please ignore this email. The link expires in {ttl}.",
+            "support": "If you're having trouble, please contact support.",
+            "cta": "Reactivate account"
+        }
+    }
+}

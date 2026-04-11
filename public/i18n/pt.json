@@ -1,7 +1,7 @@
 {
     "email": {
         "base": {
-            "title": "Edital Certo — Serviço de notificações"
+            "title": "Edital Certo — Notificações"
         },
         "confirmPwdReset": {
             "subject": "Senha atualizada com sucesso",

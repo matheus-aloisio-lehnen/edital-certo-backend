@@ -1,0 +1,48 @@
+{
+    "email": {
+        "base": {
+            "title": "Edital Certo | Notificaciones"
+        },
+        "confirmPwdReset": {
+            "subject": "Contraseña actualizada con éxito",
+            "title": "Contraseña actualizada con éxito",
+            "greeting": "Hola {userName}, tu contraseña ha sido actualizada con éxito.",
+            "warning": "¿No reconoces esta actividad? Ponte en contacto con nuestro soporte.",
+            "cta": "Acceder al sistema"
+        },
+        "confirmWinback": {
+            "subject": "Cuenta reactivada con éxito",
+            "title": "Cuenta reactivada con éxito",
+            "greeting": "¡Bienvenido de nuevo, {userName}!",
+            "content": "Te echábamos de menos.",
+            "cta": "Acceder al sistema"
+        },
+        "requestEmailOtp": {
+            "subject": "Confirmación de correo electrónico",
+            "title": "Confirmación de correo electrónico",
+            "greeting": "¡Hola, {name}!",
+            "instruction": "Usa el código de abajo para confirmar tu correo. Expira en {ttl}.",
+            "footer": "Introduce este código en la pantalla para completar la confirmación.",
+            "warning": "Si no solicitaste este código, ignora este correo.",
+            "cta": "Acceder al sistema"
+        },
+        "requestPwdReset": {
+            "subject": "Restablecimiento de contraseña",
+            "title": "Restablecimiento de contraseña",
+            "greeting": "Hola {userName}, recibimos una solicitud para restablecer tu contraseña.",
+            "instruction": "Para continuar, haz clic en el botón de abajo:",
+            "warning": "Si no solicitaste el restablecimiento, ignora este correo. El enlace expira en {ttl}.",
+            "support": "Si tienes problemas, ponte en contacto con el soporte.",
+            "cta": "Restablecer contraseña"
+        },
+        "requestWinback": {
+            "subject": "Reactivación de cuenta",
+            "title": "Reactivación de cuenta",
+            "greeting": "Hola {userName}, recibimos una solicitud para reactivar tu cuenta.",
+            "instruction": "Para continuar, haz clic en el botón de abajo y completa la reactivación:",
+            "warning": "Si no solicitaste la reactivación, ignora este correo. El enlace expira en {ttl}.",
+            "support": "Si tienes problemas, ponte en contacto con el soporte.",
+            "cta": "Reactivar cuenta"
+        }
+    }
+}

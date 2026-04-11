@@ -15,32 +15,17 @@ import { Logger } from "@logger/logger.service";
 
 @Injectable()
 export class EmailService implements IEventBus {
+
     private readonly client: Client;
     private readonly from: string;
-
-    private readonly emailTemplates = {
-        requestPwdReset: {
-            template: (lang: string, trans: any, payload: any) => requestPwdReset(lang, trans, payload),
-        },
-        confirmPwdReset: {
-            template: (lang: string, trans: any, payload: any) => confirmPwdReset(lang, trans, payload),
-        },
-        requestWinback: {
-            template: (lang: string, trans: any, payload: any) => requestWinback(lang, trans, payload),
-        },
-        confirmWinback: {
-            template: (lang: string, trans: any, payload: any) => confirmWinback(lang, trans, payload),
-        },
-        requestEmailOtp: {
-            template: (lang: string, trans: any, payload: any) => requestEmailOtp(lang, trans, payload),
-        },
-    };
+    private readonly emailTemplates: any;
 
     constructor(
         private readonly configService: ConfigService,
         private readonly logger: Logger,
         private readonly i18n: I18nService
     ) {
+
         const email = this.configService.get<AppConfig>(appConfig.KEY)?.email;
 
         if (!email?.apiKey || !email?.apiSecret || !email?.from)
@@ -48,6 +33,7 @@ export class EmailService implements IEventBus {
 
         this.from = email.from;
         this.client = Mailjet.apiConnect(email.apiKey, email.apiSecret);
+        this.emailTemplates = this.getEmailTemplates();
     }
 
     async publish(input: EventInput): Promise<void> {
@@ -55,7 +41,6 @@ export class EmailService implements IEventBus {
         const lang = langCode || 'pt';
 
         const event = this.emailTemplates[input.name];
-
         if (!event)
             return this.logger.error(`Email template not found for event: ${input.name}`, undefined, 'EmailService');
 
@@ -77,6 +62,27 @@ export class EmailService implements IEventBus {
         } catch (err) {
             this.logger.error(`Failed to send email: ${input.name}`, err.stack, 'EmailService');
         }
+
     }
 
+    private getEmailTemplates() {
+        return {
+            requestPwdReset: {
+                template: (lang: string, trans: any, payload: any) => requestPwdReset(lang, trans, payload),
+            },
+            confirmPwdReset: {
+                template: (lang: string, trans: any, payload: any) => confirmPwdReset(lang, trans, payload),
+            },
+            requestWinback: {
+                template: (lang: string, trans: any, payload: any) => requestWinback(lang, trans, payload),
+            },
+            confirmWinback: {
+                template: (lang: string, trans: any, payload: any) => confirmWinback(lang, trans, payload),
+            },
+            requestEmailOtp: {
+                template: (lang: string, trans: any, payload: any) => requestEmailOtp(lang, trans, payload),
+            },
+        };
+    }
+    
 }

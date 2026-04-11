@@ -2,6 +2,13 @@ import { ArgumentMetadata, Injectable, PipeTransform } from '@nestjs/common';
 
 @Injectable()
 export class TrimPipe implements PipeTransform {
+
+    transform(value: any, metadata: ArgumentMetadata) {
+        return metadata.type === 'body'
+            ? this.trim(value)
+            : value;
+    }
+
     private isObj(obj: any) {
         return typeof obj === 'object' && obj !== null;
     }
@@ -17,12 +24,6 @@ export class TrimPipe implements PipeTransform {
             Object.keys(value).forEach(key => value[ key ] = this.trim(value[ key ]));
 
         return value;
-    }
-
-    transform(value: any, metadata: ArgumentMetadata) {
-        return metadata.type === 'body'
-            ? this.trim(value)
-            : value;
     }
 
 }
