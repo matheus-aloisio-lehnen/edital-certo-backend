@@ -1,0 +1,51 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+LAYOUT_WITH_LEGEND()
+
+title "C2: Container Diagram - Edital Certo"
+
+Person(user, "Usuário", "Cliente Final")
+
+System_Ext(cloudflare_dns, "Cloudflare DNS/Edge", "SSL, WAF e Cloudflare Pages.")
+
+System_Boundary(aws_account, "AWS Account") {
+
+    System_Boundary(vpc_region, "VPC / Region (sa-east-1)") {
+
+        System_Boundary(ec2_vm, "EC2 Instance (Easypanel)") {
+            Container(api, "API Modular (Go/Gin)", "Go", "Cérebro do sistema: Auth, Billing e Ingestão.")
+            ContainerDb(redis, "Redis Status", "In-Memory", "Estado do CID para Polling em tempo real.")
+        }
+
+        ContainerDb(db_rds, "PostgreSQL (RDS)", "Managed Service", "Persistência central de dados.")
+
+        System_Boundary(serverless, "Serverless Layer") {
+            Container(ai_worker, "AI Worker (Lambda)", "Go", "Processa IA e atualiza o Redis da EC2 via CID.")
+            Container(notifier_worker, "Notifier Worker (Lambda)", "Go", "Envio de e-mails transacionais.")
+        }
+
+        Container(sqs, "Amazon SQS", "Message Broker", "Fila de jobs de IA e E-mails.")
+        Container(s3, "Amazon S3", "Object Storage", "Arquivos de editais e projetos (Hash).")
+    }
+}
+
+System_Ext(asaas, "Asaas API", "Payment", "Gateway de pagamentos.")
+
+' Fluxo de Tráfego
+Rel(user, cloudflare_dns, "Acessa editalcerto.com.br", "HTTPS")
+Rel(cloudflare_dns, api, "Encaminha para EC2", "HTTPS")
+
+' Comunicação Interna AWS (Baixa Latência)
+Rel(api, db_rds, "SQL (VPC Peering/Local)", "SQL")
+Rel(api, redis, "Leitura de Status", "Redis Protocol")
+Rel(api, s3, "Upload Hash", "SDK")
+Rel(api, sqs, "Publica Jobs", "SDK")
+Rel(api, asaas, "Cria cobrança", "HTTPS")
+
+' Workers e Ciclo do CID
+Rel(ai_worker, sqs, "Lê Job de IA", "SQS")
+Rel(ai_worker, redis, "Atualiza Status do CID", "Redis Protocol")
+Rel(notifier_worker, sqs, "Lê Job de E-mail", "SQS")
+
+@enduml

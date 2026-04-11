@@ -1,0 +1,46 @@
+export const i18nEmail = {
+    base: {
+        title: "email.base.title",
+    },
+    confirmPwdReset: {
+        subject: "email.confirmPwdReset.subject",
+        title: "email.confirmPwdReset.title",
+        greeting: "email.confirmPwdReset.greeting",
+        warning: "email.confirmPwdReset.warning",
+        cta: "email.confirmPwdReset.cta",
+    },
+    confirmWinback: {
+        subject: "email.confirmWinback.subject",
+        title: "email.confirmWinback.title",
+        greeting: "email.confirmWinback.greeting",
+        content: "email.confirmWinback.content",
+        cta: "email.confirmWinback.cta",
+    },
+    requestEmailOtp: {
+        subject: "email.requestEmailOtp.subject",
+        title: "email.requestEmailOtp.title",
+        greeting: "email.requestEmailOtp.greeting",
+        instruction: "email.requestEmailOtp.instruction",
+        footer: "email.requestEmailOtp.footer",
+        warning: "email.requestEmailOtp.warning",
+        cta: "email.requestEmailOtp.cta",
+    },
+    requestPwdReset: {
+        subject: "email.requestPwdReset.subject",
+        title: "email.requestPwdReset.title",
+        greeting: "email.requestPwdReset.greeting",
+        instruction: "email.requestPwdReset.instruction",
+        warning: "email.requestPwdReset.warning",
+        support: "email.requestPwdReset.support",
+        cta: "email.requestPwdReset.cta",
+    },
+    requestWinback: {
+        subject: "email.requestWinback.subject",
+        title: "email.requestWinback.title",
+        greeting: "email.requestWinback.greeting",
+        instruction: "email.requestWinback.instruction",
+        warning: "email.requestWinback.warning",
+        support: "email.requestWinback.support",
+        cta: "email.requestWinback.cta",
+    },
+} as const;

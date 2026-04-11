@@ -1,0 +1,48 @@
+{
+    "email": {
+        "base": {
+            "title": "Edital Certo — Serviço de notificações"
+        },
+        "confirmPwdReset": {
+            "subject": "Senha atualizada com sucesso",
+            "title": "Senha atualizada com sucesso",
+            "greeting": "Olá {userName}, sua senha foi atualizada com sucesso.",
+            "warning": "Não reconhece essa atividade? Entre em contato com nosso suporte.",
+            "cta": "Acessar o sistema"
+        },
+        "confirmWinback": {
+            "subject": "Conta reativada com sucesso",
+            "title": "Conta reativada com sucesso",
+            "greeting": "Seja bem-vindo de volta, {userName}!",
+            "content": "Estávamos sentindo sua falta.",
+            "cta": "Acessar o sistema"
+        },
+        "requestEmailOtp": {
+            "subject": "Confirmação de e-mail",
+            "title": "Confirmação de e-mail",
+            "greeting": "Olá, {name}!",
+            "instruction": "Use o código abaixo para confirmar seu e-mail. Ele expira em {ttl}.",
+            "footer": "Insira este código na tela para concluir a confirmação.",
+            "warning": "Se você não solicitou este código, ignore este e-mail.",
+            "cta": "Acessar o sistema"
+        },
+        "requestPwdReset": {
+            "subject": "Redefinição de senha",
+            "title": "Redefinição de senha",
+            "greeting": "Olá {userName}, recebemos uma solicitação para redefinir sua senha.",
+            "instruction": "Para continuar, clique no botão abaixo:",
+            "warning": "Se você não solicitou a redefinição, ignore este e-mail. O link expira em {ttl}.",
+            "support": "Se tiver problemas, entre em contato com o suporte.",
+            "cta": "Redefinir senha"
+        },
+        "requestWinback": {
+            "subject": "Reativação de conta",
+            "title": "Reativação de conta",
+            "greeting": "Olá {userName}, recebemos uma solicitação para reativar a sua conta.",
+            "instruction": "Para continuar, clique no botão abaixo e conclua a reativação:",
+            "warning": "Se você não solicitou a reativação, ignore este e-mail. O link expira em {ttl}.",
+            "support": "Se tiver problemas, entre em contato com o suporte.",
+            "cta": "Reativar conta"
+        }
+    }
+}

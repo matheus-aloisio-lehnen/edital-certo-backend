@@ -1,0 +1,20 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+LAYOUT_WITH_LEGEND()
+
+title "C1: System Context - Edital Certo"
+
+Person(user, "Usuário / Proponente", "Interage com o sistema via DNS gerenciado pelo Cloudflare.")
+
+System_Boundary(aws_cloud, "AWS Cloud Account") {
+    System(api_system, "Edital Certo API & Workers", "Backend modular e Workers em Lambda.")
+}
+
+System_Ext(cloudflare, "Cloudflare (DNS/Edge)", "Terminação SSL e Hospedagem Frontend.")
+System_Ext(asaas, "Asaas", "Gateway de Pagamento e Webhooks.")
+
+Rel(user, cloudflare, "Acessa via domínio customizado", "HTTPS")
+Rel(cloudflare, api_system, "Roteia tráfego para a EC2", "HTTPS/JSON")
+Rel(api_system, asaas, "Processa pagamentos", "HTTPS")
+@enduml

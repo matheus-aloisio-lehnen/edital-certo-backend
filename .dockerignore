@@ -1,0 +1,45 @@
+# node
+node_modules
+dist
+build
+coverage
+.nyc_output
+
+# git
+.git
+.gitignore
+.github
+.gitlab-ci.yml
+
+# env
+.env
+.env.*
+**/.env*
+!ops/env/.env.example
+
+# logs
+logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ide
+.vscode
+.idea
+*.swp
+*.swo
+
+# os
+.DS_Store
+Thumbs.db
+
+# docker
+docker-compose.yml
+ops/docker/docker-compose.yml
+
+# temp
+.tmp
+.temp
+.cache

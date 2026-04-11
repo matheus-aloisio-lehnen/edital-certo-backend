@@ -1,0 +1,43 @@
+export const BackendCode = {
+
+    login: "login",
+    logout: "logout",
+    takeover: "takeover",
+    requestPwdReset: "requestPwdReset",
+    confirmPwdReset: "confirmPwdReset",
+    validatePwdResetHash: "validatePwdResetHash",
+    requestPwdResetFailed: "requestPwdResetFailed",
+    validatePwdResetHashFailed: "validatePwdResetHashFailed",
+    confirmPwdResetFailed: "confirmPwdResetFailed",
+    requestWinback: "requestWinback",
+    confirmWinback: "confirmWinback",
+    validateWinbackHash: "validateWinbackHash",
+
+    requestWinbackFailed: "requestWinbackFailed",
+    validateWinbackHashFailed: "validateWinbackHashFailed",
+    confirmWinbackFailed: "confirmWinbackFailed",
+    restoreSubscription: "restoreSubscription",
+    changeInvoiceEmail: "changeInvoiceEmail",
+    requestEmailOtpFailed: "requestEmailOtpFailed",
+    validateEmailConfirmationOtpFailed: "validateEmailConfirmationOtpFailed",
+    createSubscriptionFailed: "createSubscriptionFailed",
+    restoreSubscriptionFailed: "restoreSubscriptionFailed",
+    changeInvoiceEmailFailed: "changeInvoiceEmailFailed",
+    genericWarn: "genericWarn",
+    authInvalidCredentials: "authInvalidCredentials",
+    authSessionConflict: "authSessionConflict",
+    authSessionExpired: "authSessionExpired",
+    authSessionInvalid: "authSessionInvalid",
+
+    featureNameEmpty: "featureNameEmpty",
+    featureKeyEmpty: "featureKeyEmpty",
+
+    moneyCurrencyMismatch: "moneyCurrencyMismatch",
+
+    internalServerError: "internalError",
+    unauthorized: "unauthorized",
+    forbidden: "forbidden",
+    notFound: "notFound",
+    conflict: "conflict",
+    badRequest: "badRequest",
+};

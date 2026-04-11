@@ -1,0 +1,36 @@
+Papo de sênior: sobre o C3, você tem toda razão — se o Billing é modular e recebe Webhooks, o Asaas deve aparecer como uma fronteira externa interagindo diretamente com esse componente.
+
+Sobre o erro do goplantuml, o Go mudou o caminho dos binários nas versões recentes. O comando correto de instalação e o ajuste no seu PATH seguem abaixo.
+
+1️⃣ Ajuste no C3: Componentes com Asaas e Webhooks
+Neste nível, detalhamos que o Asaas atinge especificamente o endpoint de Webhook dentro do módulo de Billing.
+
+Code snippet
+
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+LAYOUT_WITH_LEGEND()
+
+title "C3: Component Diagram - API Modules & External Hooks"
+
+System_Ext(asaas, "Asaas", "Gateway de Pagamento")
+ContainerDb(db, "PostgreSQL", "RDS", "Persistência")
+ContainerDb(redis, "Redis", "EC2 Internal", "CID Tracking")
+
+Container_Boundary(api, "Go API Application") {
+    Component(router, "Gin Router", "Framework", "Roteia requests e expõe /webhooks/asaas.")
+    Component(auth_svc, "Auth Service", "Go", "JWT, Login, Reset Password.")
+    Component(billing_svc, "Billing Service", "Go", "Processa Payload do Asaas e ativa Tenants.")
+    Component(ia_svc, "IA Core Service", "Go", "Hashing, S3 Upload e SQS Publish.")
+    Component(repo, "Repository Layer", "Go/GORM", "Queries e persistência.")
+}
+
+Rel(asaas, router, "Envia Webhooks (Pagamento)", "HTTPS/JSON")
+Rel(router, billing_svc, "Repassa payload de confirmação")
+Rel(billing_svc, repo, "Ativa assinatura e Tenant")
+Rel(repo, db, "Update Tenant Status", "SQL")
+
+Rel(router, ia_svc, "Inicia Job (CID)")
+Rel(ia_svc, redis, "Grava Status Inicial", "Redis")
+@enduml

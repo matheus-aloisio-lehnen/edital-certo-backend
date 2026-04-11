@@ -1,0 +1,49 @@
+{
+    "compilerOptions": {
+        "module": "nodenext",
+        "moduleResolution": "nodenext",
+        "resolvePackageJsonExports": true,
+        "esModuleInterop": true,
+        "isolatedModules": true,
+        "declaration": true,
+        "removeComments": true,
+        "emitDecoratorMetadata": true,
+        "experimentalDecorators": true,
+        "allowSyntheticDefaultImports": true,
+        "target": "ES2023",
+        "sourceMap": true,
+        "outDir": "./dist",
+        "baseUrl": "./",
+        "incremental": true,
+        "skipLibCheck": true,
+        "strictNullChecks": true,
+        "forceConsistentCasingInFileNames": true,
+        "noImplicitAny": false,
+        "strictBindCallApply": false,
+        "noFallthroughCasesInSwitch": false,
+        "types": ["vitest/globals"],
+        "paths": {
+            "@app/*": [
+                "src/*"
+            ],
+
+            // domain
+            "@domain/*": ["src/@core/domain/*"],
+
+            // infrastructure
+            "@templates/*": ["src/@core/infrastructure/transport/email/templates/*"],
+            "@filter/*": ["src/@core/infrastructure/transport/http/filters/*"],
+            "@logger/*": ["src/@core/infrastructure/observability/logger/*"],
+            "@metrics/*": ["src/@core/infrastructure/observability/metrics/*"],
+            "@tracer/*": ["src/@core/infrastructure/observability/tracer/*"],
+            "@functions/*": ["src/@core/infrastructure/utils/functions/*"],
+            "@pipes/*": ["src/@core/infrastructure/utils/pipes/*"],
+
+            // config
+            "@cfg/*": ["src/config/cfg/*"],
+            "@env/*": ["src/config/env/*"],
+
+            "@mock/*": ["test/mocks/*"]
+        },
+    }
+}

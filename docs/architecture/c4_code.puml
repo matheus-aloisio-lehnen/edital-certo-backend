@@ -1,0 +1,119 @@
+@startuml
+namespace bootstrap {
+    class "AWS" << (S,Aquamarine) >> {
+        + Region string
+        + ModelHaiku string
+        + ModelSonnet string
+        + SqsQueueUrl string
+        + AccessKey string
+        + SecretKey string
+
+    }
+    class "Config" << (S,Aquamarine) >> {
+        + Stage Stage
+        + HTTP HTTP
+        + JWT JWT
+        + DB DB
+        + Google Google
+        + AWS AWS
+        + TawkTo TawkTo
+
+    }
+    class "Container" << (S,Aquamarine) >> {
+        + Cfg *Config
+
+    }
+    class "DB" << (S,Aquamarine) >> {
+        + Host string
+        + User string
+        + Pass string
+        + Port int
+        + Name string
+        + Schema string
+        + Sync bool
+        + SingularTable bool
+
+    }
+    class "Google" << (S,Aquamarine) >> {
+        + ProjectID string
+        + OCRProcessorID string
+        + OCRLocation string
+        + AIModel string
+        + AILocation string
+        + Credentials string
+
+    }
+    class "HTTP" << (S,Aquamarine) >> {
+        + Port int
+        + Frontend string
+
+    }
+    class "JWT" << (S,Aquamarine) >> {
+        + Secret string
+        + Exp time.Duration
+
+    }
+    class "TawkTo" << (S,Aquamarine) >> {
+        + Secret string
+
+    }
+    class "internal.infrastructure.bootstrap.Stage" << (T, #FF7700) >>  {
+    }
+}
+namespace obs {
+    class "internal.infrastructure.obs.Kind" << (T, #FF7700) >>  {
+    }
+    class "internal.infrastructure.obs.Method" << (T, #FF7700) >>  {
+    }
+}
+namespace error {
+    interface "Coder"  {
+        + StatusCode() int
+
+    }
+    class "Error" << (S,Aquamarine) >> {
+        + Status int
+        + Message string
+        + Details any
+
+        + Error() string
+        + StatusCode() int
+
+    }
+}
+namespace helper {
+}
+namespace identity {
+    class "Identity" << (S,Aquamarine) >> {
+        + UserID string
+        + TenantID string
+
+    }
+}
+namespace middleware {
+}
+namespace response {
+    class "Response" << (S,Aquamarine) >> {
+        + Message string
+        + Data any
+
+    }
+}
+namespace routes {
+}
+namespace server {
+    class "HTTP" << (S,Aquamarine) >> {
+        - server *http.Server
+
+        + Init() error
+        + Stop() 
+
+    }
+}
+"__builtin__.string" #.. "internal.infrastructure.bootstrap.Stage"
+"__builtin__.string" #.. "internal.infrastructure.obs.Kind"
+"__builtin__.string" #.. "internal.infrastructure.obs.Method"
+
+
+
+@enduml
