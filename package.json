@@ -38,6 +38,7 @@
         "@opentelemetry/sdk-trace-node": "^2.6.1",
         "amqplib": "^1.0.3",
         "date-fns": "^4.1.0",
+        "nestjs-cls": "^6.2.0",
         "nestjs-i18n": "^10.6.0",
         "node-mailjet": "^6.0.11",
         "reflect-metadata": "^0.2.2",

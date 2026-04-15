@@ -10,6 +10,7 @@ import { EventModule } from "@event/module/event.module";
 import { ObservabilityModule } from "@observability/module/observability.module";
 import { PersistenceModule } from "@persistence/module/persistence.module";
 import { TransportModule } from "@transport/module/transport.module";
+import { ClsModule } from 'nestjs-cls';
 
 import path from "node:path";
 
@@ -26,6 +27,10 @@ import path from "node:path";
                 path: path.join(process.cwd(), 'public', 'i18n'),
                 watch: true,
             },
+        }),
+        ClsModule.forRoot({
+            global: true,
+            middleware: { mount: true },
         }),
         EventModule,
         ObservabilityModule,

@@ -1,6 +1,8 @@
 import { TraceAttributes } from "@domain/@shared/port/tracer.port";
 import { MetricLabels } from "@domain/@shared/port/metrics.port";
 
+export const txKey = Symbol('tx');
+
 export const transactionPort = Symbol('TRANSACTION_PORT');
 
 export type TransactionContext = {

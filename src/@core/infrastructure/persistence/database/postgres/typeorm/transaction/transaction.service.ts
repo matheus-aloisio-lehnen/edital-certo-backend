@@ -1,15 +1,17 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource, QueryRunner } from 'typeorm';
+import { ClsService } from 'nestjs-cls';
 import {
     ITransactionManager,
     TransactionMetadata,
+    txKey,
 } from '@domain/@shared/port/transaction.port';
 import { AppException } from '@domain/@shared/exception/app.exception';
 import { code } from '@domain/@shared/constant/code.constant';
-import { loggerPort, type ILogger } from "@domain/@shared/port/logger.port";
-import { metricsPort, type IMetrics } from "@domain/@shared/port/metrics.port";
-import { tracerPort, type ITracer } from "@domain/@shared/port/tracer.port";
+import { loggerPort, type ILogger } from '@domain/@shared/port/logger.port';
+import { metricsPort, type IMetrics } from '@domain/@shared/port/metrics.port';
+import { tracerPort, type ITracer } from '@domain/@shared/port/tracer.port';
 
 @Injectable()
 export class TransactionManager implements ITransactionManager {
@@ -18,6 +20,7 @@ export class TransactionManager implements ITransactionManager {
         @Inject(loggerPort) private readonly logger: ILogger,
         @Inject(metricsPort) private readonly metrics: IMetrics,
         @Inject(tracerPort) private readonly tracer: ITracer,
+        private readonly cls: ClsService,
     ) {}
 
     async run<T>(fn: () => Promise<T>, metadata?: TransactionMetadata): Promise<T> {
@@ -25,39 +28,44 @@ export class TransactionManager implements ITransactionManager {
         const span = this.tracer.start(context, metadata?.trace);
         const tx = await this.begin();
 
-        try {
-            const result = await fn();
+        return this.cls.run(async () => {
+            this.cls.set(txKey, tx);
 
-            await this.commit(tx);
-            this.metrics.increment(`${context}.success`, metadata?.metrics);
+            try {
+                const result = await fn();
 
-            return result;
-        } catch (error) {
-            await this.rollback(tx);
-            this.metrics.increment(`${context}.error`, metadata?.metrics);
+                await this.commit(tx);
+                this.metrics.increment(`${context}.success`, metadata?.metrics);
 
-            if (error instanceof Error)
-                span.recordException(error);
+                return result;
+            } catch (error) {
+                await this.rollback(tx);
+                this.metrics.increment(`${context}.error`, metadata?.metrics);
 
-            this.logger.write({
-                level: 'error',
-                context,
-                message: {
-                    code: error instanceof AppException ? error.code : code.internalServerError,
-                    error,
-                    data: metadata?.data,
-                    trace: metadata?.trace,
-                    metrics: metadata?.metrics,
-                },
-            });
+                if (error instanceof Error)
+                    span.recordException(error);
 
-            if (error instanceof AppException)
-                throw error;
+                this.logger.write({
+                    level: 'error',
+                    context,
+                    message: {
+                        code: error instanceof AppException ? error.code : code.internalServerError,
+                        error,
+                        data: metadata?.data,
+                        trace: metadata?.trace,
+                        metrics: metadata?.metrics,
+                    },
+                });
 
-            throw new AppException(code.internalServerError, 500);
-        } finally {
-            span.end();
-        }
+                if (error instanceof AppException)
+                    throw error;
+
+                throw new AppException(code.internalServerError, 500);
+            } finally {
+                this.cls.set(txKey, undefined);
+                span.end();
+            }
+        });
     }
 
     private async begin(): Promise<QueryRunner> {
