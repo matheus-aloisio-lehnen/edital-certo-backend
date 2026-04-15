@@ -1,26 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ConfigService } from "@nestjs/config";
-import { appConfig } from "@cfg/app.config";
-import { Tracer } from "@tracer/tracer.service";
+import { Tracer } from "@observability/tracer/tracer.service";
+import { createConfigServiceMock } from '@mock/tests.mock';
 
 describe('Tracer', () => {
     let service: Tracer;
-
-    const createConfigService = (trace: boolean): ConfigService => ({
-        get: (key: string) => {
-            if (key !== appConfig.KEY)
-                return undefined;
-
-            return {
-                observability: {
-                    trace,
-                },
-            };
-        },
-    } as ConfigService);
+    let MockConfigServe: ConfigService;
 
     beforeEach(() => {
-        service = new Tracer(createConfigService(true));
+        MockConfigServe = createConfigServiceMock({
+            observability: { logs: true, metric: true, trace: true },
+        });
+        service = new Tracer(MockConfigServe);
     });
 
     it('should be defined', () => {
@@ -30,6 +21,8 @@ describe('Tracer', () => {
     it('starts a span and applies attributes', () => {
         const span = {
             setAttributes: vi.fn(),
+            end: vi.fn(),
+            recordException: vi.fn(),
         };
         const startSpanSpy = vi.spyOn((service as any).tracer, 'startSpan').mockReturnValue(span);
 
@@ -43,18 +36,27 @@ describe('Tracer', () => {
             context: 'QuotaUsageService',
             success: true,
         });
-        expect(result).toBe(span);
+        result.end();
+        expect(span.end).toHaveBeenCalled();
     });
 
     it('starts a span without attributes when tracing is disabled', () => {
-        service = new Tracer(createConfigService(false));
+        MockConfigServe = createConfigServiceMock({
+            observability: { logs: true, metric: true, trace: false },
+        });
+        service = new Tracer(MockConfigServe);
 
-        const span = {};
+        const span = {
+            end: vi.fn(),
+            setAttributes: vi.fn(),
+            recordException: vi.fn(),
+        };
         const startSpanSpy = vi.spyOn((service as any).tracer, 'startSpan').mockReturnValue(span);
 
         const result = service.start('quota_usage_get');
 
         expect(startSpanSpy).toHaveBeenCalledWith('quota_usage_get');
-        expect(result).toBe(span);
+        result.end();
+        expect(span.end).toHaveBeenCalled();
     });
 });

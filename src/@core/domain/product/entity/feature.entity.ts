@@ -1,54 +1,163 @@
-import { ResetWindow } from "@domain/product/constants/reset-window.constant";
-import { FeatureKey } from "@domain/product/constants/feature-keys.constant";
-import { BackendCode } from "@domain/@shared/constants/backend-code.constant";
-import { AppException } from "@domain/@shared/exceptions/app.exception";
-import { CreateFeatureInput } from "@domain/product/types/feature.type";
+import { QuotaRenewalCycle } from "@domain/product/constant/quota-renewal-cycle.constant";
+import { FeatureKey } from "@domain/product/constant/feature-key.constant";
+import { CreateFeatureProps } from "@domain/product/props/create-feature.props";
+import { AppException } from "@domain/@shared/exception/app.exception";
+import { code } from "@domain/@shared/constant/code.constant";
+import { hasValue } from "@domain/@shared/utils/helper.utils";
 
 export class Feature {
-    id: number;
-    name: string;
-    key: FeatureKey;
-    hidden: boolean;
-    isActive: boolean;
-    hasQuota: boolean;
-    quota: number;
-    resetWindow: ResetWindow;
 
-    constructor(data: CreateFeatureInput) {
-        this.name = data.name;
-        this.key = data.key;
-        this.hidden = data.hidden ?? true;
-        this.isActive = data.isActive ?? false;
-        this.hasQuota = data.hasQuota ?? false;
-        this.quota = data.quota ?? -1;
-        this.resetWindow = data.resetWindow;
+    private readonly _id?: number;
+    private readonly _key: FeatureKey;
+    private readonly _planId?: number;
+
+    private readonly _name: string;
+    private _order: number;
+    private _hidden: boolean;
+    private _isActive: boolean;
+
+    private _hasQuota: boolean;
+    private _quota: number;
+    private _quotaRenewalCycle: QuotaRenewalCycle;
+
+    private readonly _createdAt?: Date;
+    private _updatedAt?: Date;
+
+    constructor(data: CreateFeatureProps) {
+        this._name = data.name;
+        this._key = data.key;
+        this._order = data.order;
+        this._planId = data.planId;
+
+        this._hidden = data.hidden ?? true;
+        this._isActive = data.isActive ?? false;
+
+        this._hasQuota = data.hasQuota ?? false;
+        this._quota = data.quota ?? 0;
+        this._quotaRenewalCycle = data.quotaRenewalCycle;
 
         this.validate();
     }
 
-    validate(): void {
-        if (!this.name || this.name.trim() === "")
-            throw new AppException(BackendCode.featureNameEmpty, 400);
+    get id(): number {
+        if (!hasValue(this._id))
+            throw new AppException(code.featureIdEmptyError, 500);
 
-        if (!this.key || this.key.trim() === "")
-            throw new AppException(BackendCode.featureKeyEmpty, 400);
+        return this._id;
+    }
+
+    get key() {
+        return this._key;
+    }
+
+    get planId(): number {
+        if (!hasValue(this._planId))
+            throw new AppException(code.featurePlanIdEmptyError, 500);
+
+        return this._planId;
+    }
+
+    get name() {
+        return this._name;
+    }
+
+    get order() {
+        return this._order;
+    }
+
+    get hidden() {
+        return this._hidden;
+    }
+
+    get isActive() {
+        return this._isActive;
+    }
+
+    get hasQuota() {
+        return this._hasQuota;
+    }
+
+    get quota() {
+        return this._quota;
+    }
+
+    get quotaRenewalCycle() {
+        return this._quotaRenewalCycle;
+    }
+
+    get createdAt() {
+        return this._createdAt;
+    }
+
+    get updatedAt() {
+        return this._updatedAt;
+    }
+
+    private validate(): void {
+        if (!this._name || this._name.trim() === "")
+            throw new AppException(code.featureNameEmptyError, 400);
+
+        if (!this._key || this._key.trim() === "")
+            throw new AppException(code.featureKeyEmptyError, 400);
+
+        if (hasValue(this._planId) && this._planId < 1)
+            throw new AppException(code.featurePlanIdInvalidError, 400);
+
+        if (this._order < 1)
+            throw new AppException(code.featureOrderNegativeError, 400);
+
+        if (this._hasQuota && this._quota < -1)
+            throw new AppException(code.featureQuotaOutOfBoundsError, 400);
+
+        if (!this._hasQuota && this._quota !== 0)
+            throw new AppException(code.featureQuotaDisabledMustBeZeroError, 400);
+    }
+
+    changeOrder(order: number): void {
+        if (order < 1)
+            throw new AppException(code.featureOrderNegativeError, 400);
+
+        this._order = order;
     }
 
     activate(): void {
-        this.isActive = true;
+        this._isActive = true;
     }
 
     deactivate(): void {
-        this.isActive = false;
+        this._isActive = false;
     }
 
-    toggleVisibility(): void {
-        this.hidden = !this.hidden;
+    hide(): void {
+        this._hidden = true;
     }
 
-    setUnlimitedQuota(): void {
-        this.hasQuota = false;
-        this.quota = -1;
+    show(): void {
+        this._hidden = false;
+    }
+
+    enableQuota(quota: number, cycle: QuotaRenewalCycle): void {
+        if (quota < -1)
+            throw new AppException(code.featureQuotaOutOfBoundsError, 400);
+
+        this._hasQuota = true;
+        this._quota = quota;
+        this._quotaRenewalCycle = cycle;
+    }
+
+    disableQuota(): void {
+        this._hasQuota = false;
+        this._quota = 0;
+    }
+
+    changeQuota(quota: number): void {
+        if (!this._hasQuota)
+            throw new AppException(code.featureQuotaNotEnabledError, 400);
+
+        if (quota < -1)
+            throw new AppException(code.featureQuotaOutOfBoundsError, 400);
+
+        this._quota = quota;
     }
 
 }

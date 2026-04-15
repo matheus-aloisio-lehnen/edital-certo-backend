@@ -3,15 +3,14 @@ import { ConfigModule } from "@nestjs/config";
 import { appConfig } from "@cfg/app.config";
 import { AppController } from "@app/app.controller";
 import { AppService } from "@app/app.service";
-import { Logger } from '@logger/logger.service';
-import { Metrics } from "@metrics/metrics.service";
-import { Tracer } from "@tracer/tracer.service";
 import { provideGlobalPipes } from "@cfg/pipes.options";
 import { provideGlobalFilters } from "@cfg/filters.options";
-import { RabbitmqAdapter } from './@core/infrastructure/transport/rabbitmq/rabbitmq.adapter';
-import { EmailService } from './@core/infrastructure/transport/email/email.service';
 import { I18nModule } from "nestjs-i18n";
-import { TransactionManager } from "@app/@core/infrastructure/persistence/database/postgres/typeorm/transaction/transaction.adapter";
+import { EventModule } from "@event/module/event.module";
+import { ObservabilityModule } from "@observability/module/observability.module";
+import { PersistenceModule } from "@persistence/module/persistence.module";
+import { TransportModule } from "@transport/module/transport.module";
+
 import path from "node:path";
 
 @Module({
@@ -28,18 +27,16 @@ import path from "node:path";
                 watch: true,
             },
         }),
+        EventModule,
+        ObservabilityModule,
+        PersistenceModule,
+        TransportModule,
     ],
     controllers: [ AppController ],
     providers: [
         AppService,
-        Logger,
-        Metrics,
-        Tracer,
         ...provideGlobalFilters(),
         ...provideGlobalPipes(),
-        RabbitmqAdapter,
-        EmailService,
-        TransactionManager,
     ],
 })
 export class AppModule {

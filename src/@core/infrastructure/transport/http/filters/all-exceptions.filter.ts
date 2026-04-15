@@ -1,11 +1,11 @@
 import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus } from '@nestjs/common';
 import { Request, Response as ExpressResponse } from "express";
-import { AppException } from "@domain/@shared/exceptions/app.exception";
-import { Response } from "@domain/@shared/types/http.type";
-import { BackendCode } from "@domain/@shared/constants/backend-code.constant";
-import { Logger } from "@logger/logger.service";
-import { Metrics } from "@metrics/metrics.service";
-import { Tracer } from "@tracer/tracer.service";
+import { Response } from "@domain/@shared/type/http.type";
+import { AppException } from "@domain/@shared/exception/app.exception";
+import { code } from "@domain/@shared/constant/code.constant";
+import { Logger } from "@observability/logger/logger.service";
+import { Metrics } from "@observability/metrics/metrics.service";
+import { Tracer } from "@observability/tracer/tracer.service";
 
 @Catch()
 export class AllExceptionsFilter<T> implements ExceptionFilter {
@@ -86,7 +86,7 @@ export class AllExceptionsFilter<T> implements ExceptionFilter {
         return {
             data: null,
             message: 'Internal server error',
-            code: BackendCode.internalServerError,
+            code: code.internalServerError,
             statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         };
     }
@@ -119,6 +119,6 @@ export class AllExceptionsFilter<T> implements ExceptionFilter {
             return this.getCode(exceptionResponse, message);
         }
 
-        return BackendCode.internalServerError;
+        return code.internalServerError;
     }
 }

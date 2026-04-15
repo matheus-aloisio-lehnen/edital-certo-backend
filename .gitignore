@@ -3,7 +3,7 @@ dist
 build
 node_modules
 
-# logs
+# observability
 logs
 *.log
 npm-debug.log*
@@ -41,8 +41,8 @@ coverage
 .env.test.local
 .env.production.local
 .env.local
-ops/env/.env*
-!ops/env/.env.example
+devops/env/.env*
+!devops/env/.env.example
 
 # temp
 .temp

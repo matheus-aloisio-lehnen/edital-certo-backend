@@ -1,119 +1,78 @@
 @startuml
-namespace bootstrap {
-    class "AWS" << (S,Aquamarine) >> {
-        + Region string
-        + ModelHaiku string
-        + ModelSonnet string
-        + SqsQueueUrl string
-        + AccessKey string
-        + SecretKey string
+skinparam linetype ortho
+skinparam packageStyle rectangle
+skinparam shadowing false
 
-    }
-    class "Config" << (S,Aquamarine) >> {
-        + Stage Stage
-        + HTTP HTTP
-        + JWT JWT
-        + DB DB
-        + Google Google
-        + AWS AWS
-        + TawkTo TawkTo
+title "C4: Code Diagram - Fluxo de Ingestão e Processamento Assíncrono"
 
-    }
-    class "Container" << (S,Aquamarine) >> {
-        + Cfg *Config
-
-    }
-    class "DB" << (S,Aquamarine) >> {
-        + Host string
-        + User string
-        + Pass string
-        + Port int
-        + Name string
-        + Schema string
-        + Sync bool
-        + SingularTable bool
-
-    }
-    class "Google" << (S,Aquamarine) >> {
-        + ProjectID string
-        + OCRProcessorID string
-        + OCRLocation string
-        + AIModel string
-        + AILocation string
-        + Credentials string
-
-    }
-    class "HTTP" << (S,Aquamarine) >> {
-        + Port int
-        + Frontend string
-
-    }
-    class "JWT" << (S,Aquamarine) >> {
-        + Secret string
-        + Exp time.Duration
-
-    }
-    class "TawkTo" << (S,Aquamarine) >> {
-        + Secret string
-
-    }
-    class "internal.infrastructure.bootstrap.Stage" << (T, #FF7700) >>  {
-    }
+package "Backend / NestJS" {
+  class HttpController
+  class UploadFileUseCase
+  class StorageService
+  class RabbitmqPublisher
+  class Logger
+  class Metrics
+  class Tracer
 }
-namespace obs {
-    class "internal.infrastructure.obs.Kind" << (T, #FF7700) >>  {
-    }
-    class "internal.infrastructure.obs.Method" << (T, #FF7700) >>  {
-    }
+
+package "Queue Processor / NestJS" {
+  class QueueMessageHandler
+  class WorkerHttpClient
+  class BackendHttpClient
 }
-namespace error {
-    interface "Coder"  {
-        + StatusCode() int
 
-    }
-    class "Error" << (S,Aquamarine) >> {
-        + Status int
-        + Message string
-        + Details any
-
-        + Error() string
-        + StatusCode() int
-
-    }
+package "Worker / Go" {
+  class WorkerApi
+  class FileDownloader
+  class TextExtractor
+  class EmbeddingService
+  class VectorRepository
+  class WorkerRabbitPublisher
 }
-namespace helper {
-}
-namespace identity {
-    class "Identity" << (S,Aquamarine) >> {
-        + UserID string
-        + TenantID string
 
-    }
-}
-namespace middleware {
-}
-namespace response {
-    class "Response" << (S,Aquamarine) >> {
-        + Message string
-        + Data any
+database "PostgreSQL" as Postgres
+queue "RabbitMQ" as Rabbit
+cloud "GCP Bucket" as Bucket
+cloud "Gemini / ChatGPT API" as AI
 
-    }
-}
-namespace routes {
-}
-namespace server {
-    class "HTTP" << (S,Aquamarine) >> {
-        - server *http.Server
+HttpController --> UploadFileUseCase : inicia processamento
+UploadFileUseCase --> StorageService : envia arquivo
+UploadFileUseCase --> RabbitmqPublisher : publica job
+UploadFileUseCase --> Logger : log
+UploadFileUseCase --> Metrics : métricas
+UploadFileUseCase --> Tracer : span
 
-        + Init() error
-        + Stop() 
+StorageService --> Bucket : upload
+RabbitmqPublisher --> Rabbit : publish
 
-    }
-}
-"__builtin__.string" #.. "internal.infrastructure.bootstrap.Stage"
-"__builtin__.string" #.. "internal.infrastructure.obs.Kind"
-"__builtin__.string" #.. "internal.infrastructure.obs.Method"
+Rabbit --> QueueMessageHandler : consume
+QueueMessageHandler --> WorkerHttpClient : repassa job
+QueueMessageHandler --> BackendHttpClient : notifica backend quando necessário
 
+WorkerHttpClient --> WorkerApi : POST /process
+WorkerApi --> FileDownloader : baixa arquivo
+FileDownloader --> Bucket : download
+WorkerApi --> TextExtractor : extrai texto
+WorkerApi --> EmbeddingService : gera embeddings
+EmbeddingService --> AI : chamada externa
+WorkerApi --> VectorRepository : persiste resultado
+VectorRepository --> Postgres : insert/update
+WorkerApi --> WorkerRabbitPublisher : publica status
+WorkerRabbitPublisher --> Rabbit : publish
 
+Rabbit --> QueueMessageHandler : status / conclusão
+QueueMessageHandler --> BackendHttpClient : atualiza backend
+
+note right of QueueMessageHandler
+  Backend e Worker apenas publicam no RabbitMQ.
+  O Queue Processor é quem consome
+  e faz a ponte via REST entre os dois lados.
+end note
+
+note bottom of Postgres
+  Backup diário é sincronizado para bucket GCP.
+  Um PostgreSQL cold standby pode ser ligado
+  apenas em cenários de restauração.
+end note
 
 @enduml

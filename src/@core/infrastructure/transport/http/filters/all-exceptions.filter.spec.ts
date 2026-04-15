@@ -1,8 +1,8 @@
 import { ArgumentsHost, HttpException, HttpStatus } from '@nestjs/common';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { AppException } from "@domain/@shared/exceptions/app.exception";
-import { BackendCode } from "@domain/@shared/constants/backend-code.constant";
 import { AllExceptionsFilter } from './all-exceptions.filter';
+import { AppException } from "@domain/@shared/exception/app.exception";
+import { code } from "@domain/@shared/constant/code.constant";
 
 describe('AllExceptionsFilter', () => {
     let filter: AllExceptionsFilter<unknown>;
@@ -38,7 +38,7 @@ describe('AllExceptionsFilter', () => {
 
     it('returns the mapped response for AppException', () => {
         filter.catch(new AppException(
-            BackendCode.internalServerError,
+            code.internalServerError,
             HttpStatus.BAD_REQUEST,
             'System unavailable',
         ), host);
@@ -47,12 +47,12 @@ describe('AllExceptionsFilter', () => {
         expect(json).toHaveBeenCalledWith(expect.objectContaining({
             data: null,
             message: 'System unavailable',
-            code: BackendCode.internalServerError,
+            code: code.internalServerError,
             statusCode: HttpStatus.BAD_REQUEST,
             path: '/quota-usage',
         }));
         expect(metrics.increment).toHaveBeenCalledWith('http_exceptions_total', {
-            code: BackendCode.internalServerError,
+            code: code.internalServerError,
             context: 'AllExceptionsFilter',
             statusCode: String(HttpStatus.BAD_REQUEST),
         });
@@ -60,7 +60,7 @@ describe('AllExceptionsFilter', () => {
             level: 'error',
             context: 'AllExceptionsFilter',
             message: {
-                code: BackendCode.internalServerError,
+                code: code.internalServerError,
                 message: 'System unavailable',
                 method: 'GET',
                 path: '/quota-usage',
@@ -68,7 +68,7 @@ describe('AllExceptionsFilter', () => {
             },
         });
         expect(tracer.start).toHaveBeenCalledWith('http_exception_filter', {
-            code: BackendCode.internalServerError,
+            code: code.internalServerError,
             method: 'GET',
             path: '/quota-usage',
         });
@@ -99,7 +99,7 @@ describe('AllExceptionsFilter', () => {
         expect(json).toHaveBeenCalledWith(expect.objectContaining({
             data: null,
             message: 'Internal server error',
-            code: BackendCode.internalServerError,
+            code: code.internalServerError,
             statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
             path: '/quota-usage',
         }));

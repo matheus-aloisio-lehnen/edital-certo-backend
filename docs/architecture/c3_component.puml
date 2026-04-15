@@ -1,36 +1,69 @@
-Papo de sênior: sobre o C3, você tem toda razão — se o Billing é modular e recebe Webhooks, o Asaas deve aparecer como uma fronteira externa interagindo diretamente com esse componente.
-
-Sobre o erro do goplantuml, o Go mudou o caminho dos binários nas versões recentes. O comando correto de instalação e o ajuste no seu PATH seguem abaixo.
-
-1️⃣ Ajuste no C3: Componentes com Asaas e Webhooks
-Neste nível, detalhamos que o Asaas atinge especificamente o endpoint de Webhook dentro do módulo de Billing.
-
-Code snippet
-
 @startuml
 !include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
 
 LAYOUT_WITH_LEGEND()
 
-title "C3: Component Diagram - API Modules & External Hooks"
+title "C3: Component Diagram - Backend e Processamento Assíncrono"
 
-System_Ext(asaas, "Asaas", "Gateway de Pagamento")
-ContainerDb(db, "PostgreSQL", "RDS", "Persistência")
-ContainerDb(redis, "Redis", "EC2 Internal", "CID Tracking")
+ContainerDb(db, "PostgreSQL", "PostgreSQL", "Persistência principal e vetores")
+ContainerDb(redis, "Redis", "Redis", "Cache")
+Container(rabbitmq, "RabbitMQ", "Broker", "Mensageria assíncrona")
+System_Ext(gcp_files, "GCP Bucket (Arquivos)", "Object storage")
+System_Ext(ai_api, "Gemini / ChatGPT API", "APIs externas de IA")
 
-Container_Boundary(api, "Go API Application") {
-    Component(router, "Gin Router", "Framework", "Roteia requests e expõe /webhooks/asaas.")
-    Component(auth_svc, "Auth Service", "Go", "JWT, Login, Reset Password.")
-    Component(billing_svc, "Billing Service", "Go", "Processa Payload do Asaas e ativa Tenants.")
-    Component(ia_svc, "IA Core Service", "Go", "Hashing, S3 Upload e SQS Publish.")
-    Component(repo, "Repository Layer", "Go/GORM", "Queries e persistência.")
+Container_Boundary(api, "Backend - NestJS Monolith") {
+    Component(http_api, "HTTP API", "NestJS Controllers", "Recebe requests do frontend e do site")
+    Component(app_services, "Application Services / Use Cases", "NestJS Providers", "Orquestram regras de negócio e fluxos")
+    Component(domain_core, "Domain Core", "Entities, Value Objects, Factories, Ports", "Modelo de domínio e contratos")
+    Component(persistence_adapters, "Persistence Adapters", "Repositories", "Implementam acesso ao PostgreSQL")
+    Component(storage_adapter, "Storage Adapter", "Bucket Client", "Publica arquivos no bucket")
+    Component(queue_publisher, "Queue Publisher", "RabbitMQ Publisher", "Publica eventos e solicitações para processamento")
+    Component(cache_adapter, "Cache Adapter", "Redis Client", "Cache e leitura rápida")
+    Component(observability, "Observability", "Logger, Metrics, Tracer", "Logs, métricas e traces via OTLP")
 }
 
-Rel(asaas, router, "Envia Webhooks (Pagamento)", "HTTPS/JSON")
-Rel(router, billing_svc, "Repassa payload de confirmação")
-Rel(billing_svc, repo, "Ativa assinatura e Tenant")
-Rel(repo, db, "Update Tenant Status", "SQL")
+Container_Boundary(queue_bridge, "Queue Processor - NestJS") {
+    Component(queue_consumer, "Queue Consumer", "RabbitMQ Consumer", "Consome eventos publicados no broker")
+    Component(worker_gateway, "Worker Gateway", "HTTP Client", "Repasse do fluxo para o worker")
+    Component(api_gateway, "Backend Gateway", "HTTP Client", "Notifica o backend sobre resultados do worker")
+    Component(queue_obs, "Observability", "Logger, Metrics, Tracer", "Telemetria do fluxo assíncrono")
+}
 
-Rel(router, ia_svc, "Inicia Job (CID)")
-Rel(ia_svc, redis, "Grava Status Inicial", "Redis")
+Container_Boundary(worker_boundary, "Worker - Go") {
+    Component(file_loader, "File Loader", "Go", "Baixa arquivo do bucket")
+    Component(text_pipeline, "Extraction + Embedding Pipeline", "Go", "Extrai texto, chama IA e prepara vetores")
+    Component(vector_writer, "Vector Writer", "Go", "Persiste embeddings e metadados no PostgreSQL")
+    Component(worker_publisher, "Worker Publisher", "RabbitMQ Publisher", "Publica status e conclusão no broker")
+}
+
+Rel(http_api, app_services, "Chama")
+Rel(app_services, domain_core, "Usa")
+Rel(app_services, persistence_adapters, "Persiste")
+Rel(app_services, storage_adapter, "Envia arquivos")
+Rel(app_services, queue_publisher, "Publica mensagem de processamento")
+Rel(app_services, cache_adapter, "Usa cache quando necessário")
+Rel(http_api, observability, "Registra telemetria")
+Rel(app_services, observability, "Registra telemetria")
+
+Rel(persistence_adapters, db, "SQL")
+Rel(cache_adapter, redis, "Redis")
+Rel(storage_adapter, gcp_files, "HTTPS")
+Rel(queue_publisher, rabbitmq, "AMQP")
+
+Rel(queue_consumer, rabbitmq, "Consome mensagens")
+Rel(queue_consumer, worker_gateway, "Encaminha jobs do backend para o worker")
+Rel(queue_consumer, api_gateway, "Encaminha status do worker para o backend")
+Rel(queue_consumer, queue_obs, "Registra telemetria")
+
+Rel(worker_gateway, worker_boundary, "HTTP / REST")
+Rel(api_gateway, http_api, "HTTP / REST")
+
+Rel(file_loader, gcp_files, "Baixa arquivo")
+Rel(text_pipeline, ai_api, "Executa IA")
+Rel(text_pipeline, vector_writer, "Entrega chunks e embeddings")
+Rel(vector_writer, db, "SQL")
+Rel(worker_publisher, rabbitmq, "AMQP")
+
+Rel(worker_boundary, worker_publisher, "Publica status e conclusão")
+
 @enduml

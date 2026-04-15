@@ -6,7 +6,7 @@ import { resourceFromAttributes } from "@opentelemetry/resources";
 import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-node";
 import { NodeTracerProvider } from "@opentelemetry/sdk-trace-node";
 import { AppConfig, appConfig } from "@cfg/app.config";
-import { ITracer, TraceAttributes } from "@domain/@shared/ports/trace.port";
+import { ITracer, ITraceSpan, TraceAttributes } from "@domain/@shared/port/tracer.port";
 
 @Injectable()
 export class Tracer implements ITracer, OnModuleDestroy {
@@ -40,16 +40,24 @@ export class Tracer implements ITracer, OnModuleDestroy {
         this.tracer = this.tracerProvider.getTracer('backend');
     }
 
-    start(name: string, attributes?: TraceAttributes): Span {
+    start(name: string, attributes?: TraceAttributes): ITraceSpan {
         const span = this.tracer.startSpan(name);
 
         if (!this.enabled)
-            return span;
+            return this.toTraceSpan(span);
 
         if (attributes)
             span.setAttributes(attributes);
 
-        return span;
+        return this.toTraceSpan(span);
+    }
+
+    private toTraceSpan(span: Span): ITraceSpan {
+        return {
+            end: () => span.end(),
+            setAttributes: (attributes: TraceAttributes) => span.setAttributes(attributes),
+            recordException: (error: Error) => span.recordException(error),
+        };
     }
 
     async onModuleDestroy(): Promise<void> {

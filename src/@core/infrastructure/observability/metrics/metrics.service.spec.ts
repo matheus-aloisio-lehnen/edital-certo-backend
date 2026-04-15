@@ -1,26 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ConfigService } from "@nestjs/config";
-import { appConfig } from "@cfg/app.config";
 import { Metrics } from "./metrics.service";
+import { createConfigServiceMock } from '@mock/tests.mock';
 
 describe('Metrics', () => {
     let service: Metrics;
-
-    const createConfigService = (metric: boolean): ConfigService => ({
-        get: (key: string) => {
-            if (key !== appConfig.KEY)
-                return undefined;
-
-            return {
-                observability: {
-                    metric,
-                },
-            };
-        },
-    } as ConfigService);
+    let MockConfigServe: ConfigService;
 
     beforeEach(() => {
-        service = new Metrics(createConfigService(true));
+        MockConfigServe = createConfigServiceMock({
+            observability: { logs: true, metric: true, trace: true },
+        });
+        service = new Metrics(MockConfigServe);
     });
 
     it('should be defined', () => {
@@ -85,7 +76,10 @@ describe('Metrics', () => {
     });
 
     it('does not record metrics when observability is disabled', () => {
-        service = new Metrics(createConfigService(false));
+        MockConfigServe = createConfigServiceMock({
+            observability: { logs: true, metric: false, trace: true },
+        });
+        service = new Metrics(MockConfigServe);
 
         const getCounterSpy = vi.spyOn(service as any, 'getCounter');
 

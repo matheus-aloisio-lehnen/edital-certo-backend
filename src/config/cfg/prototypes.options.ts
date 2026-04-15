@@ -1,4 +1,4 @@
-import { WhereClause } from "@domain/@shared/types/page.type";
+import { WhereClause } from "@domain/@shared/type/page.type";
 
 let registered = false;
 

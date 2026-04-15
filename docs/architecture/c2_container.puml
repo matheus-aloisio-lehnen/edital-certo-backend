@@ -5,47 +5,56 @@ LAYOUT_WITH_LEGEND()
 
 title "C2: Container Diagram - Edital Certo"
 
-Person(user, "Usuário", "Cliente Final")
+Person(user, "Usuário", "Cliente final")
+Person(ops, "Operação / Admin", "Opera a stack local e as rotinas de backup")
 
-System_Ext(cloudflare_dns, "Cloudflare DNS/Edge", "SSL, WAF e Cloudflare Pages.")
+System_Ext(cloudflare, "Cloudflare", "DNS, SSL e Tunnel")
+System_Ext(ai_api, "Gemini / ChatGPT API", "APIs externas para análises e IA")
+System_Ext(gcp_files, "GCP Bucket (Arquivos)", "Object storage dos arquivos enviados")
+System_Ext(gcp_backup, "GCP Bucket (Backups)", "Recebe backup diário e artefatos de recuperação")
+System_Ext(cold_db, "PostgreSQL Cold Standby", "Banco desligado na nuvem, ligado só em restore")
 
-System_Boundary(aws_account, "AWS Account") {
+System_Boundary(local_stack, "Infraestrutura Local") {
+    Container(site, "Site", "Angular", "Site público/marketing")
+    Container(frontend, "Frontend", "Angular", "Aplicação autenticada do usuário")
+    Container(tunnel, "Cloudflare Tunnel", "cloudflared", "Exposição segura dos serviços locais")
 
-    System_Boundary(vpc_region, "VPC / Region (sa-east-1)") {
+    Container(api, "Backend", "NestJS Monolith", "API principal, autenticação, domínio, upload, billing e orquestração")
+    Container(queue_processor, "Queue Processor", "NestJS", "Consome mensagens do RabbitMQ e faz a ponte entre backend e worker via REST")
+    Container(worker, "Worker", "Go", "Extrai texto, chama IA, gera embeddings e vetoriza no PostgreSQL")
 
-        System_Boundary(ec2_vm, "EC2 Instance (Easypanel)") {
-            Container(api, "API Modular (Go/Gin)", "Go", "Cérebro do sistema: Auth, Billing e Ingestão.")
-            ContainerDb(redis, "Redis Status", "In-Memory", "Estado do CID para Polling em tempo real.")
-        }
-
-        ContainerDb(db_rds, "PostgreSQL (RDS)", "Managed Service", "Persistência central de dados.")
-
-        System_Boundary(serverless, "Serverless Layer") {
-            Container(ai_worker, "AI Worker (Lambda)", "Go", "Processa IA e atualiza o Redis da EC2 via CID.")
-            Container(notifier_worker, "Notifier Worker (Lambda)", "Go", "Envio de e-mails transacionais.")
-        }
-
-        Container(sqs, "Amazon SQS", "Message Broker", "Fila de jobs de IA e E-mails.")
-        Container(s3, "Amazon S3", "Object Storage", "Arquivos de editais e projetos (Hash).")
-    }
+    ContainerDb(db, "PostgreSQL", "PostgreSQL", "Banco transacional principal e armazenamento vetorial")
+    ContainerDb(redis, "Redis", "Redis", "Cache e suporte de performance do backend")
+    Container(rabbitmq, "RabbitMQ", "Broker", "Canal assíncrono de publicação de mensagens")
+    Container(backup_job, "Postgres Backup Job", "Cron / Scripts", "Gera backup diário do PostgreSQL e sincroniza para o bucket")
 }
 
-System_Ext(asaas, "Asaas API", "Payment", "Gateway de pagamentos.")
+Rel(user, cloudflare, "Acessa os domínios públicos", "HTTPS")
+Rel(cloudflare, tunnel, "Encaminha tráfego", "Cloudflare Tunnel")
+Rel(tunnel, site, "Expõe site público", "HTTP")
+Rel(tunnel, frontend, "Expõe aplicação web", "HTTP")
+Rel(tunnel, api, "Expõe API", "HTTP")
 
-' Fluxo de Tráfego
-Rel(user, cloudflare_dns, "Acessa editalcerto.com.br", "HTTPS")
-Rel(cloudflare_dns, api, "Encaminha para EC2", "HTTPS")
+Rel(frontend, api, "Consome API", "HTTPS / JSON")
+Rel(site, api, "Integra formulários e fluxos públicos quando necessário", "HTTPS / JSON")
 
-' Comunicação Interna AWS (Baixa Latência)
-Rel(api, db_rds, "SQL (VPC Peering/Local)", "SQL")
-Rel(api, redis, "Leitura de Status", "Redis Protocol")
-Rel(api, s3, "Upload Hash", "SDK")
-Rel(api, sqs, "Publica Jobs", "SDK")
-Rel(api, asaas, "Cria cobrança", "HTTPS")
+Rel(api, db, "Lê e grava dados de negócio", "SQL")
+Rel(api, redis, "Usa cache", "Redis")
+Rel(api, gcp_files, "Faz upload dos arquivos", "HTTPS")
+Rel(api, rabbitmq, "Publica mensagens", "AMQP")
 
-' Workers e Ciclo do CID
-Rel(ai_worker, sqs, "Lê Job de IA", "SQS")
-Rel(ai_worker, redis, "Atualiza Status do CID", "Redis Protocol")
-Rel(notifier_worker, sqs, "Lê Job de E-mail", "SQS")
+Rel(worker, rabbitmq, "Publica status e eventos de processamento", "AMQP")
+Rel(queue_processor, rabbitmq, "Consome mensagens", "AMQP")
+Rel(queue_processor, worker, "Dispara processamento e ações do worker", "HTTP / REST")
+Rel(queue_processor, api, "Notifica o backend sobre o resultado do processamento", "HTTP / REST")
+
+Rel(worker, gcp_files, "Baixa arquivos para processar", "HTTPS")
+Rel(worker, ai_api, "Executa extração/IA/embeddings", "HTTPS")
+Rel(worker, db, "Grava vetores e metadados processados", "SQL")
+
+Rel(backup_job, db, "Executa backup diário", "pg_dump / base backup")
+Rel(backup_job, gcp_backup, "Sincroniza backup diário e artefatos de recuperação", "HTTPS")
+Rel(gcp_backup, cold_db, "Fonte para restore em emergência", "Backup / Restore")
+Rel(ops, cold_db, "Liga apenas quando necessário", "Operação manual")
 
 @enduml

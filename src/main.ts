@@ -4,7 +4,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 import { AppModule } from "@app/app.module";
 import { AppConfig, appConfig } from "@cfg/app.config";
-import { Logger } from "@logger/logger.service";
+import { Logger } from "@observability/logger/logger.service";
 import { registerPrototypes } from "@cfg/prototypes.options";
 
 async function bootstrap() {

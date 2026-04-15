@@ -1,26 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ConfigService } from "@nestjs/config";
-import { appConfig } from "@cfg/app.config";
-import { Logger } from "@logger/logger.service";
+import { Logger } from "@observability/logger/logger.service";
+import { createConfigServiceMock } from '@mock/tests.mock';
 
 describe('Logger', () => {
     let service: Logger;
-
-    const createConfigService = (logs: boolean): ConfigService => ({
-        get: (key: string) => {
-            if (key !== appConfig.KEY)
-                return undefined;
-
-            return {
-                observability: {
-                    logs,
-                },
-            };
-        },
-    } as ConfigService);
+    let MockConfigServe: ConfigService;
 
     beforeEach(() => {
-        service = new Logger(createConfigService(true));
+        MockConfigServe = createConfigServiceMock({
+            observability: { logs: true, metric: true, trace: true },
+        });
+        service = new Logger(MockConfigServe);
     });
 
     it('should be defined', () => {
@@ -72,8 +63,11 @@ describe('Logger', () => {
         });
     });
 
-    it('does not export when logs are disabled', () => {
-        service = new Logger(createConfigService(false));
+    it('does not export when observability are disabled', () => {
+        MockConfigServe = createConfigServiceMock({
+            observability: { logs: false, metric: true, trace: true },
+        });
+        service = new Logger(MockConfigServe);
 
         const emitSpy = vi.spyOn((service as any).otelLogger, 'emit');
 

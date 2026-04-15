@@ -27,23 +27,23 @@
                 "src/*"
             ],
 
-            // domain
+            // application
+            "@application/*": ["src/@core/application/*"],
+
             "@domain/*": ["src/@core/domain/*"],
 
             // infrastructure
-            "@templates/*": ["src/@core/infrastructure/transport/email/templates/*"],
-            "@filter/*": ["src/@core/infrastructure/transport/http/filters/*"],
-            "@logger/*": ["src/@core/infrastructure/observability/logger/*"],
-            "@metrics/*": ["src/@core/infrastructure/observability/metrics/*"],
-            "@tracer/*": ["src/@core/infrastructure/observability/tracer/*"],
-            "@functions/*": ["src/@core/infrastructure/utils/functions/*"],
-            "@pipes/*": ["src/@core/infrastructure/utils/pipes/*"],
+            "@event/*": ["src/@core/infrastructure/event/*"],
+            "@persistence/*": ["src/@core/infrastructure/persistence/*"],
+            "@observability/*": ["src/@core/infrastructure/observability/*"],
+            "@transport/*": ["src/@core/infrastructure/transport/*"],
+            "@utils/*": ["src/@core/infrastructure/utils/*"],
 
             // config
             "@cfg/*": ["src/config/cfg/*"],
             "@env/*": ["src/config/env/*"],
 
-            "@mock/*": ["test/mocks/*"]
+            "@mock/*": ["test/mock/*"]
         },
     }
 }

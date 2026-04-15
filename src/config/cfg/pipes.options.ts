@@ -1,9 +1,9 @@
 import { HttpStatus, Provider, ValidationError, ValidationPipe } from "@nestjs/common";
 import { APP_PIPE } from "@nestjs/core";
-import { TrimPipe } from "@pipes/trim/trim.pipe";
-import { getFirstValidationError } from "@functions/functions.utils";
-import { AppException } from "@domain/@shared/exceptions/app.exception";
-import { BackendCode } from "@domain/@shared/constants/backend-code.constant";
+import { TrimPipe } from "@utils/pipe/trim/trim.pipe";
+import { AppException } from "@domain/@shared/exception/app.exception";
+import { code } from "@domain/@shared/constant/code.constant";
+import { getFirstValidationError } from "@utils/function/global-function.utils";
 
 
 export const provideGlobalPipes = (): Provider[] => [
@@ -23,8 +23,8 @@ export const provideGlobalPipes = (): Provider[] => [
                 },
                 exceptionFactory: (errors: ValidationError[]) => {
                     const error = getFirstValidationError(errors);
-                    const code = error?.code ?? BackendCode.badRequest;
-                    return new AppException(code, HttpStatus.BAD_REQUEST);
+                    const errorCode = error?.code ?? code.badRequest;
+                    return new AppException(errorCode, HttpStatus.BAD_REQUEST);
                 },
             }),
     },

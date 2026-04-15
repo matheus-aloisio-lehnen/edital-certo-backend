@@ -1,455 +1,17 @@
-// ============================================================
-// MODULE: ANALYSIS
-// Responsável por Draft, Evaluation, File, Job, NoticeSummary, NoticeUser
-// ============================================================
-
-Table draft {
-  id integer [pk, increment]
-  tenant_id integer [ref: > tenant.id]
-  user_id integer [ref: > user.id]
-  title varchar(255)
-  funding_id varchar(255)
-  category varchar(255)
-  target varchar(255) // public alvo
-  start_submission varchar(255)
-  end_submission varchar(255)
-  content_gz bytea
-  created_at timestamptz
-  updated_at timestamptz
-  deleted_at timestamptz
-  indexes {
-    (tenant_id, user_id)
-  }
-}
-
-Table evaluation {
-  id integer [pk, increment]
-  tenant_id integer [ref: > tenant.id]
-  user_id integer [ref: > user.id]
-  notice_title varchar(255)
-  project_title varchar(255)
-  overall_score integer
-  strengths text[]
-  weaknesses text[]
-  suggestions text[]
-  created_at timestamptz
-  updated_at timestamptz
-  deleted_at timestamptz
-}
-
-Table evaluation_score {
-  id integer [pk, increment]
-  evaluation_id integer [ref: > evaluation.id]
-  name varchar(255)
-  score integer
-  created_at timestamptz
-  updated_at timestamptz
-  deleted_at timestamptz
-}
-
-Table file {
-  id integer [pk, increment]
-  tenant_id integer [ref: > tenant.id, note: 'NULL para arquivos globais']
-  user_id integer [ref: > user.id]
-  content_hash varchar(255) [note: 'SHA256 para evitar duplicidade']
-  kind varchar(20) // PROJECT | NOTICE | DRAFT | EVALUATE
-  display_name varchar(255) // Nome original (ex: edital.pdf)
-  storage_name varchar(255)// Nome físico no bucket (ex: 20260204-hash.pdf)
-  folder varchar(255) // Pasta do storage
-  path varchar(255) // Snapshot completo (Folder + StorageName)
-  extension varchar(10) // Já deve vir tratada da borda (.pdf, .png, etc)
-  size_bytes integer
-  is_public boolean [default: false]
-  url text
-  expires_at timestamptz
-  created_at timestamptz
-  updated_at timestamptz
-  deleted_at timestamptz
-  indexes {
-    (tenant_id, content_hash)
-    path
-    kind
-  }
-}
-
-Table notice_summary {
-  id integer [pk, increment]
-  file_id integer [ref: - file.id, unique]
-  title varchar(255) [note: 'Título global do edital']
-  content bytea
-  created_at timestamptz
-  updated_at timestamptz
-  deleted_at timestamptz
-}
-
-Table notice_user {
-  id integer [pk, increment]
-  tenant_id integer [ref: > tenant.id]
-  user_id integer [ref: > user.id]
-  notice_summary_id integer [ref: > notice_summary.id]
-  created_at timestamptz
-  updated_at timestamptz
-  deleted_at timestamptz
-  indexes {
-    (user_id, notice_summary_id) [unique]
-  }
-}
-
-Table job {
-  id varchar(255) [pk]
-  tenant_id integer [ref: > tenant.id]
-  user_id integer [ref: > user.id]
-  kind varchar(50)
-  status varchar(20)
-  file_names text[]
-  total_bytes integer
-  error_message text
-  created_at timestamptz
-  updated_at timestamptz
-  deleted_at timestamptz
-}
-
-// ============================================================
-// MODULE: ACCESS
-// Responsável por Identidade, Usuários e Sessões
-// ============================================================
-
-Table user {
-  id integer [pk, increment]
-  tenant_id integer [ref: > tenant.id]
-  name varchar(200)
-  email varchar(150) [unique]
-  password varchar(100) [note: 'Hash da senha (vo.Password)']
-  role varchar(20) [note: 'OWNER ou MEMBER']
-  created_at timestamptz [default: `now()`]
-  updated_at timestamptz [default: `now()`]
-  deleted_at timestamptz
-}
-
-Table session {
-  id uuid [pk] // Gerado no domínio via uuid.New().String()
-  user_id integer [ref: > user.id, not null]
-  tenant_id integer [ref: > tenant.id, not null]
-  refresh_token varchar(150) [unique, note: 'Token aleatório para rotação']
-  status varchar(20) [note: 'PENDING ou ACTIVE']
-  ip varchar(45) [note: 'Suporte a IPv4 e IPv6']
-  user_agent text
-  device varchar(150) [note: 'Ex: Chrome on Windows, iPhone App']
-  expires_at timestamptz [not null]
-  created_at timestamptz [default: `now()`]
-  updated_at timestamptz [default: `now()`]
-  deleted_at timestamptz [note: 'Gerencia a revogação (Soft Delete)']
-
-  Note: 'Gerenciamento de sessões com suporte a Single Session e Refresh Token Rotation'
-}
-
-// ============================================================
-// MODULE: BILLING
-// Responsável por Tenant, Assinatura, Entitlements e Cobrança
-// ============================================================
-
-
-
-Table identity {
-  id integer [pk, increment]
-  tenant_id integer [ref: - tenant.id, unique]
-
-  phone varchar(40)
-  document varchar(50)
-  document_country varchar(2)
-  person_type varchar(20) // PF, PJ
-  sector_source varchar(100)
-
-  created_at timestamptz [default: `now()`]
-  updated_at timestamptz
-  deleted_at timestamptz
-}
-
-Table address {
-  id integer [pk, increment]
-  tenant_id integer [ref: - tenant.id, unique]
-
-  zip_code varchar(20)
-  street varchar(200)
-  number varchar(30)
-  complement varchar(150)
-  city varchar(100)
-  state varchar(50)
-  country_code varchar(2) [default: 'BR']
-
-  created_at timestamptz [default: `now()`]
-  updated_at timestamptz
-  deleted_at timestamptz
-}
-
-Table tenant_feature {
-  id integer [pk, increment]
-  tenant_id integer [ref: > tenant.id]
-  feature_id integer [ref: > feature.id]
-
-  enabled boolean [default: true]
-  is_active boolean [default: true]
-
-  starts_at timestamptz
-  ends_at timestamptz
-
-  created_at timestamptz [default: `now()`]
-  updated_at timestamptz
-  deleted_at timestamptz
-
-  indexes {
-    (tenant_id, feature_id) [unique]
-  }
-}
-
-Table tenant_quota {
-  id integer [pk, increment]
-  tenant_id integer [ref: > tenant.id]
-  quota_id integer [ref: > quota.id]
-
-  limit bigint [default: 0, note: '-1 para ilimitado']
-  is_active boolean [default: true]
-
-  starts_at timestamptz
-  ends_at timestamptz
-
-  created_at timestamptz [default: `now()`]
-  updated_at timestamptz
-  deleted_at timestamptz
-
-  indexes {
-    (tenant_id, quota_id) [unique]
-  }
-}
-
-Table quota_consumption {
-  id integer [pk, increment]
-  tenant_id integer [ref: > tenant.id]
-  quota_id integer [ref: > quota.id]
-
-  period date [note: 'Normalizado: primeiro dia do período']
-  used bigint [default: 0]
-  limit bigint [default: 0, note: 'Snapshot do limite aplicado no período']
-
-  last_sync_at timestamptz [default: `now()`]
-
-  created_at timestamptz [default: `now()`]
-  updated_at timestamptz
-
-  indexes {
-    (tenant_id, quota_id, period) [unique]
-  }
-}
-
-
-Table tenant {
-  id integer [pk, increment]
-  name varchar(200)
-  email varchar(150) [unique]
-
-  // Espelho operacional do plano atual da assinatura.
-  // Usado para resolver feature/quota sem depender de join com subscription.
-  plan_id integer [ref: > plan.id]
-
-  phone varchar(40)
-  document varchar(50)
-  sector_source varchar(100)
-  city varchar(100)
-  state varchar(50)
-  country_code varchar(2) [default: 'BR']
-
-  created_at timestamptz [default: `now()`]
-  updated_at timestamptz
-  deleted_at timestamptz
-}
-
-Table subscription {
-  id integer [pk, increment]
-  tenant_id integer [ref: - tenant.id, unique]
-
-  plan_id integer [ref: > plan.id, note: 'Fonte contratual do plano; tenant.plan_id deve espelhar este valor']
-  price_id integer [ref: > price.id]
-
-  plan_name varchar(100)
-  plan_key varchar(60)
-
-  invoice_email varchar(150)
-  status varchar(30) [default: 'ACTIVE', note: 'ACTIVE, OVERDUE, SUSPENDED, CANCELLED']
-
-  external_customer_id varchar(80) [unique, note: 'ID do cliente no Asaas']
-  external_subscription_id varchar(100) [unique, note: 'ID da assinatura no Asaas']
-
-  billing_cycle varchar(30) [note: 'MONTHLY, YEARLY']
-  billing_day integer
-  next_due_date timestamptz
-
-  seats integer [default: 1]
-  unit_price bigint [note: 'Valor unitario em centavos']
-  final_price bigint [note: 'Valor final atual da assinatura em centavos']
-
-  overdue_invoice_id integer [ref: > invoice.id, null]
-  overdue_since timestamptz
-  block_at timestamptz
-
-  starts_at timestamptz
-  ends_at timestamptz
-  cancelled_at timestamptz
-
-  created_at timestamptz [default: `now()`]
-  updated_at timestamptz
-  deleted_at timestamptz
-}
-
-Table subscriptionChange {
-  id integer [pk, increment]
-  subscriptionId integer [ref: > subscription.id]
-  tenantId integer [ref: > tenant.id]
-
-  type varchar(30) [note: 'onboarding, upgrade, downgrade, seat_change, cancel, winback']
-  reason varchar(255)
-
-  actorUserId integer [ref: > user.id, null]
-
-  fromPlanId integer [ref: > plan.id, null]
-  fromPlanName varchar(100)
-  fromPlanKey varchar(60)
-  fromPriceId integer [ref: > price.id, null]
-  fromCycle varchar(30) [note: 'monthly, yearly']
-  fromSeats integer
-  fromUnitPrice bigint
-  fromFinalPrice bigint
-  fromMrr bigint
-
-  toPlanId integer [ref: > plan.id, null]
-  toPlanName varchar(100)
-  toPlanKey varchar(60)
-  toPriceId integer [ref: > price.id, null]
-  toCycle varchar(30) [note: 'monthly, yearly']
-  toSeats integer
-  toUnitPrice bigint
-  toFinalPrice bigint
-  toMrr bigint
-
-  mrrVariation bigint [note: 'to_mrr - from_mrr']
-  effectiveAt timestamptz [default: `now()`]
-  createdAt timestamptz [default: `now()`]
-}
-
-Table invoice {
-  id integer [pk, increment]
-  tenant_id integer [ref: > tenant.id]
-  subscription_id integer [ref: > subscription.id]
-
-  status varchar(30) // PENDING, PAID, OVERDUE, CANCELLED
-  due_date timestamptz
-  value bigint // valor em centavos
-
-  external_id varchar(100) [unique, note: 'ID do pagamento no Asaas (pay_...)']
-  paid_at timestamptz
-  last_event_id varchar(150) [note: 'ID do webhook para deduplicação']
-
-  created_at timestamptz [default: `now()`]
-  updated_at timestamptz
-  deleted_at timestamptz
-}
-
-Table checkout {
-  id integer [pk, increment]
-  payload jsonb
-  status varchar(30)
-  createdAt timestamptz [default: `now()`]
-  updatedAt timestamptz
-  deletedAt timestamptz
-}
-
-Table stripe_event {
-  id varchar(100) [pk] // evt_xxx
-  type varchar(100)
-  created_at timestamptz
-}
-
-//{
-//  "tenant": {
-//    "name": "Empresa XPTO",
-//    "email": "contato@xpto.com",
-//    "externalCustomerId": "cus_123",
-//    "identity": {
-//      "phone": "48999999999",
-//      "document": "12345678901",
-//      "personType": "pj",
-//      "sectorSource": "SITE"
-//    },
-//    "address": {
-//      "zipCode": "88000000",
-//      "street": "Rua Exemplo",
-//      "number": "123",
-//      "complement": "Sala 2",
-//      "city": "Florianopolis",
-//      "state": "SC",
-//      "country": "Brasil"
-//    }
-//  },
-//  "user": {
-//    "name": "Matheus",
-//    "email": "contato@xpto.com",
-//    "password": "senha-ou-hash-aqui",
-//    "role": "OWNER"
-//  },
-//  "subscription": {
-//    "externalCheckoutId": "chk_123",
-//    "link": "https://checkout.asaas.com/...",
-//    "planId": 1,
-//    "priceId": 2,
-//    "planKey": "pro",
-//    "cycle": "monthly",
-//    "billingDay": 10,
-//    "seats": 1,
-//    "unitPrice": 1000,
-//    "finalPrice": 1000,
-//    "paymentMethod": "boleto",
-//  },
-//}
-
-
-// ============================================================
-// MODULE: PRODUCT
-// Responsável por Planos, Preços, Quotas e Permissões
-// ============================================================
-
-Table plan {
-  id integer [pk, increment]
-  name varchar(100) // Ex: Free, Básico, Pro, Enterprise
-  key varchar(60) [unique, note: 'FREE, BASIC, PRO, ENTERPRISE, PARTNER']
-  is_active boolean [default: true]
-  created_at timestamptz [default: `now()`]
-  updated_at timestamptz [default: `now()`]
-  deleted_at timestamptz
-}
-
-Table price {
-  id integer [pk, increment]
-  plan_id integer [ref: > plan.id]
-  cycle varchar(30) [note: 'MONTHLY, YEARLY']
-  value bigint [note: 'Valor em centavos']
-  is_active bool [default: true]
-
-  created_at timestamptz [default: `now()`]
-  updated_at timestamptz
-  deleted_at timestamptz
-
-  indexes {
-    (plan_id, cycle, is_active) [unique]
-  }
-}
+// PRODUCT
 
 Table feature {
   id integer [pk, increment]
   plan_id integer [ref: > plan.id]
 
-  key varchar(100) [note: 'Ex: notice_library, write_drafts, evaluate_project, ai_helper, calendar, multi_user']
+  key varchar(100) [note: 'Ex: LIBRARY, SUMMARY, WRITE, EVALUATE, AI_HELP, CALENDAR, MULTI_USER']
   name varchar(150)
-  enabled bool [default: false]
-  is_active bool [default: true]
+  order integer
+  hidden bool [default: true]
+  is_active bool [default: false]
+  has_quota bool [default: false]
+  quota integer [default: 0]
+  quota_renewal_cycle varchar(20) [note: 'MONTHLY, YEARLY, STATIC']
 
   created_at timestamptz [default: `now()`]
   updated_at timestamptz
@@ -457,164 +19,373 @@ Table feature {
 
   indexes {
     (plan_id, key) [unique]
+    (plan_id, order) [unique]
   }
 }
 
-// 1. Camada de Rastro (Audit Log / Tracking Individual)
-Table feature_usage_events {
-  id bigint [pk, increment]
-  tenant_id integer [ref: > tenants.id]
-  user_id integer [ref: > users.id, note: 'Quem realizou a ação']
-  feature_id integer [ref: > features.id]
-  amount integer [note: 'Quantidade consumida']
-  used_at timestamptz [default: `now()`]
-
-  Note: 'Tabela de insert-only para histórico e auditoria detalhada.'
-}
-
-// 2. Camada de Performance (Consolidado para Validação Rápida)
-Table feature_usage_cache {
+Table price {
   id integer [pk, increment]
-  tenant_id integer [ref: > tenants.id]
-  feature_id integer [ref: > features.id]
-  period varchar(7) [note: 'Formato YYYY-MM ou STATIC']
-  amount integer [default: 0, note: 'Soma acumulada do período']
-  updated_at timestamptz
+  plan_id integer [ref: > plan.id]
 
-  indexes {
-    (tenant_id, feature_id, period) [unique]
-  }
-
-  Note: 'Tabela de update para evitar SUM() pesado no banco.'
-}
-
-Table quota {
-  id integer [pk, increment]
-  feature_id integer [ref: > feature.id, unique]
-
-  limit bigint [default: 0, note: '-1 para ilimitado']
-  reset_window varchar(20) [default: 'MONTHLY', note: 'MONTHLY, YEARLY, STATIC']
-  is_active bool [default: true]
+  key varchar(100) [note: 'Ex: FREE_MONTHLY_BRL, START_YEARLY_USD. Ver priceKey no código.']
+  currency varchar(3) [note: 'BRL, USD, EUR']
+  billing_cycle varchar(30) [note: 'MONTHLY, YEARLY']
+  value bigint [note: 'Valor base em centavos']
+  is_active bool [default: true, note: 'Apenas um registro ativo por (key, billing_cycle)']
 
   created_at timestamptz [default: `now()`]
   updated_at timestamptz
   deleted_at timestamptz
+
+  indexes {
+    (plan_id)
+    (key, billing_cycle)
+  }
 }
 
-// ============================================================
-// MODULE: COMMUNICATION
-// Responsável por Alertas, Notificações e Confirmações de Leitura
-// Esse alert nao deveria ser alert. deveria ser comunicação com cliente. São eles: Aviso de manutenção, Aviso de marketing em modal, Aviso de atraso, talvez changelog
-// ============================================================
-
-Table alert {
+Table discount {
   id integer [pk, increment]
-  title varchar(200) [not null]
-  subtitle varchar(200)
-  message text [not null]
-  type varchar(30) [not null, note: 'MKT, SYSTEM, MODAL, IMAGE']
-  is_active boolean [default: false, note: 'Controle de veiculação (nasce inativo)']
+  price_id integer [ref: > price.id]
 
-  // Call to Action (CTA) - Opcionais conforme lógica de domínio
-  btn_type varchar(20) [note: 'FILLED | OUTLINED']
-  btn_text varchar(100)
-  url text [note: 'Link de redirecionamento (CTA)']
+  key varchar(100) [unique]
+  name varchar(100)
+  type varchar(20) [note: 'PERCENT, FIXED']
+  value bigint [note: 'Percentual inteiro ou valor fixo em centavos']
+  strategy varchar(20) [note: 'ONCE, REPEATING, FOREVER']
+  cycle integer [null, note: 'Obrigatorio se duration_type = REPEATING']
 
-  image_url text [note: 'Obrigatório para o tipo IMAGE']
-  toolbar_color varchar(15) [note: 'Cor em Hexadecimal (ex: #FFFFFF)']
+  starts_at timestamptz
+  ends_at timestamptz [null]
+
+  is_active bool [default: true]
+
+  external_coupon_id varchar(100) [null]
+  external_promotion_code_id varchar(100) [null]
+
+  created_at timestamptz [default: `now()`]
+  updated_at timestamptz
+  deleted_at timestamptz
+
+  indexes {
+    (price_id)
+    (price_id, is_active)
+  }
+}
+
+Table plan {
+  id integer [pk, increment]
+  key varchar(50) [unique, not null, note: 'FREE, START, PRO, TEAMS']
+  name varchar(100) [not null]
+  is_active boolean [not null, default: true]
 
   created_at timestamptz [default: `now()`]
   updated_at timestamptz [default: `now()`]
   deleted_at timestamptz
+
+  Note: 'Tabela base de planos. Chaves em UPPERCASE para match com o back-end.'
 }
 
-Table alert_ack {
+// IDENTITY
+
+Table tenant {
   id integer [pk, increment]
-  user_id integer [ref: > user.id, not null]
-  alert_id integer [ref: > alert.id, not null]
-  read_at timestamptz [default: `now()`, note: 'Data de confirmação da leitura (Imutável)']
+  name varchar(200)
+
+  plan_id integer [ref: > plan.id]
+
+  phone varchar(40)
+  document varchar(50)
+  sector varchar(100)
+  city varchar(100)
+  state varchar(50)
+  country_code varchar(2) [default: 'BR']
 
   created_at timestamptz [default: `now()`]
   updated_at timestamptz
   deleted_at timestamptz
 
   indexes {
-    (user_id, alert_id) [unique, note: 'Trava: Impede duplicidade de leitura para o mesmo alerta']
+    plan_id
+    document
+    created_at
   }
 }
 
-Enum changelog_type {
-  feature
-  improvement
-  fix
-  announcement
-}
-
-Table changelog_release {
+Table tenant_feature {
   id integer [pk, increment]
-  version varchar(20)
-  html text
-  published_at timestamp [not null]
+  tenant_id integer [ref: > tenant.id]
+  feature_id integer [ref: > feature.id]
+
+  is_active boolean [default: true]
+
+  created_at timestamptz [default: `now()`]
+  updated_at timestamptz
+  deleted_at timestamptz
+
+  indexes {
+    (tenant_id, feature_id) [unique]
+    (tenant_id)
+    (feature_id)
+  }
+
+  Note: 'Override por tenant para ativar ou desativar features independentemente do plano.'
+}
+
+Table feature_usage {
+  id integer [pk, increment]
+  tenant_id integer [ref: > tenant.id]
+  feature_id integer [ref: > feature.id]
+
+  period varchar(20) [note: 'Ex: YYYY-MM, YYYY ou STATIC']
+  amount integer [default: 0, note: 'Soma acumulada do periodo']
+
+  created_at timestamptz [default: `now()`]
+  updated_at timestamptz
+
+  indexes {
+    (tenant_id, feature_id, period) [unique]
+    (tenant_id)
+    (feature_id)
+  }
+
+  Note: 'Acumulado operacional por periodo.'
+}
+
+Table feature_usage_event {
+  id bigint [pk, increment]
+
+  tenant_id integer [ref: > tenant.id]
+  user_id integer [ref: > user.id, null]
+  feature_id integer [ref: > feature.id]
+
+  amount integer [note: 'Quantidade consumida']
+  period varchar(20) [note: 'Ex: YYYY-MM, YYYY ou STATIC']
+
+  used_at timestamptz [default: `now()`]
+  created_at timestamptz [default: `now()`]
+
+  indexes {
+    (tenant_id, feature_id, period)
+    (tenant_id, user_id, used_at)
+    (feature_id, used_at)
+    (used_at)
+  }
+
+  Note: 'Histórico detalhado de consumo por feature.'
+}
+
+Table user {
+  id integer [pk, increment]
+  tenant_id integer [ref: > tenant.id]
+  name varchar(200)
+  email varchar(150) [unique]
+  password varchar(100)
+  role varchar(20) [note: 'owner, member']
+  lang_code varchar(10) [default: 'pt', note: 'pt, en, es']
+  avatar_id integer [null]
+
+  created_at timestamptz [default: `now()`]
+  updated_at timestamptz [default: `now()`]
+  deleted_at timestamptz
+
+  indexes {
+    tenant_id
+    email
+    (tenant_id, email) [unique]
+    deleted_at
+  }
+}
+
+Table session {
+  id uuid [pk]
+  user_id integer [ref: > user.id, not null]
+  tenant_id integer [ref: > tenant.id, not null]
+  refresh_token varchar(150) [unique]
+  status varchar(20)
+  ip varchar(45)
+  user_agent text
+  device varchar(150)
+  expires_at timestamptz [not null]
+  created_at timestamptz [default: `now()`]
+  updated_at timestamptz [default: `now()`]
+  deleted_at timestamptz
+
+  indexes {
+      user_id
+      tenant_id
+      refresh_token [unique]
+      expires_at
+      (user_id, status)
+    }
+  Note: 'Gerenciamento de sessões com suporte a Single Session e Refresh Token Rotation'
+}
+
+// BILLING
+
+Table subscription {
+  id integer [pk, increment]
+  tenant_id integer [ref: - tenant.id, unique]
+
+  plan_id integer [ref: > plan.id]
+  price_id integer [ref: > price.id]
+
+  plan_name varchar(100)
+  plan_key varchar(60)
+
+  invoice_email varchar(150)
+  status varchar(30) [default: 'ACTIVE']
+
+  external_customer_id varchar(100) [unique]
+  external_subscription_id varchar(100) [unique]
+
+  billing_cycle varchar(30)
+  billing_day integer
+  next_due_date timestamptz
+  seats integer [default: 1]
+  currency varchar(3)
+  discount_type varchar(20) [null]
+  discount_value bigint [null]
+  unit_price bigint
+  price_with_discount bigint
+  total_price bigint
+  total_with_discount bigint
+
+  overdue_invoice_id integer [null]
+  overdue_since timestamptz
+  block_at timestamptz
+
+  starts_at timestamptz
+  ends_at timestamptz
+
+  created_at timestamptz [default: `now()`]
+  updated_at timestamptz
+  deleted_at timestamptz
+
+  indexes {
+    (tenant_id) [unique]
+    (external_subscription_id) [unique]
+    (external_customer_id) [unique]
+    (status)
+    (next_due_date)
+    (plan_id)
+    (price_id)
+  }
+}
+
+Table subscription_change {
+  id integer [pk, increment]
+  subscription_id integer [ref: > subscription.id]
+  tenant_id integer [ref: > tenant.id]
+
+  type varchar(30) [note: 'ONBOARDING, UPGRADE, DOWNGRADE, SEAT_CHANGE, CANCEL, WINBACK, DISCOUNT_APPLIED, DISCOUNT_EXPIRED, RENEWAL']
+  reason varchar(255) [null]
+
+  actor_fullname varchar(255)
+
+  from_plan_id integer [ref: > plan.id, null]
+  to_plan_id integer [ref: > plan.id, null]
+
+  from_plan_name varchar(100) [null]
+  to_plan_name varchar(100) [null]
+
+  from_plan_key varchar(60) [null]
+  to_plan_key varchar(60) [null]
+
+  from_price_id integer [ref: > price.id, null]
+  to_price_id integer [ref: > price.id, null]
+
+  from_discount_id integer [ref: > discount.id, null]
+  to_discount_id integer [ref: > discount.id, null]
+
+  from_billing_cycle varchar(30) [null]
+  to_billing_cycle varchar(30) [null]
+
+  from_currency varchar(3) [null]
+  to_currency varchar(3) [null]
+
+  from_seats integer [null]
+  to_seats integer [null]
+
+  from_unit_price bigint [null]
+  to_unit_price bigint [null]
+
+  from_total_price bigint [null]
+  to_total_price bigint [null]
+
+  from_total_with_discount bigint [null]
+  to_total_with_discount bigint [null]
+
+  effective_at timestamptz [default: `now()`]
+
+  created_at timestamptz [default: `now()`]
+  updated_at timestamptz
+
+  indexes {
+    (subscription_id)
+    (tenant_id)
+    (effective_at)
+    (type)
+  }
+}
+
+
+// NOTIFICATIONS
+
+Table changelog {
+  id integer [pk, increment]
+  version varchar(20) [not null]
+  title varchar(255) [not null]
+  html text [not null]
   is_published boolean [not null, default: false]
-  created_at timestamp [not null, default: `now()`]
-  updated_at timestamp
+  published_at timestamptz
 
-  Note: 'Cada registro representa uma release completa do changelog. content guarda title, html por idioma.'
+  created_at timestamptz [default: `now()`]
+  updated_at timestamptz [default: `now()`]
+  deleted_at timestamptz
+
+  indexes {
+    version [unique]
+    is_published
+    published_at
+  }
+
+  Note: 'Registro de atualizações e novas funcionalidades do sistema'
 }
 
-//{
-//  "pt-BR": {
-//    "title": "Workspace mais fluido",
-//    "description": "Melhorias na escrita e revisão de projetos.",
-//    "html": "<p>Nesta release, melhoramos...</p>"
-//  },
-//  "en": {
-//    "title": "A smoother workspace",
-//    "description": "Improvements to project writing and review.",
-//    "html": "<p>In this release, we improved...</p>"
-//  }
-//}
+Table broadcast {
+  id integer [pk, increment]
+  type varchar(10) [not null]
+  severity varchar(15) [not null]
+  priority integer [not null]
+  content text [not null]
+  is_active boolean [not null, default: false]
+  expires_at timestamptz
 
+  created_at timestamptz [default: `now()`]
+  updated_at timestamptz [default: `now()`]
+  deleted_at timestamptz
 
-// ============================================================
-// MODULE: CACHE (REDIS)
-// Estrutura de chaves voláteis para Sessão e Quotas
-// ============================================================
+  indexes {
+    is_active
+    expires_at
+    (is_active, expires_at)
+  }
 
-Table cache_session_control {
-  key varchar [pk, note: 'Ex: access:active:{userID}']
-  value uuid [note: 'ID da Sessão (UUID) que detém o acesso titular']
-  ttl integer [note: 'Mesmo TTL do Refresh Token']
-
-  Note: 'Controla a Regra de Sessão Única (Single Session)'
+  Note: 'Centraliza as comunicações do sistema'
 }
 
-Table cache_session_takeover {
-  key varchar [pk, note: 'Ex: access:takeover:{userID}']
-  value uuid [note: 'ID da Sessão (UUID) candidata a derrubar a titular']
-  ttl integer [note: 'Fixo: 15 minutos (constantsshared.FifteenMinutes)']
+Table user_broadcast_ack {
+  id integer [pk, increment]
+  user_id integer [not null, ref: > user.id]
+  broadcast_id integer [not null, ref: > broadcast.id]
+  read_at timestamptz [not null, default: `now()`]
+
+  created_at timestamptz [default: `now()`]
+  updated_at timestamptz
+
+  indexes {
+    (user_id, broadcast_id) [unique]
+  }
+
+  Note: 'Rastreio de leitura individual'
 }
-
-Table cache_session_registry {
-  key varchar [pk, note: 'Ex: access:registry:{sessionID}']
-  value varchar [note: 'Status da Sessão: ACTIVE ou PENDING']
-  ttl integer
-}
-
-Table cache_quota_usage {
-  key varchar [pk, note: 'Ex: quota:usage:{tenantID}:{quotaKey}:{period}']
-  value bigint [note: 'Contador de uso atual (Incr/Decr)']
-  ttl integer [note: 'Janela de Reset: Mês atual + margem de segurança']
-
-  Note: 'Fonte primária para QuotaUsageService antes do Sync para o DB'
-}
-
-// Esse ta errado pq não é global
-//Table cache_otp_challenge {
-//  key varchar [pk, note: 'O código de 6 dígitos (OTP)']
-//  value json [note: 'Dados do contexto: {email, userID, action, tenantID}']
-//  ttl integer [note: 'Fixo: 15 minutos']
-//
-//  Note: 'Utilizado por SendChallengeCode, SendRecoveryCode e InviteUser'
-//}
-

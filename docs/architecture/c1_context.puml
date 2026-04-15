@@ -5,16 +5,26 @@ LAYOUT_WITH_LEGEND()
 
 title "C1: System Context - Edital Certo"
 
-Person(user, "Usuário / Proponente", "Interage com o sistema via DNS gerenciado pelo Cloudflare.")
+Person(user, "Usuário", "Acessa o site público, autentica no app e usa as funcionalidades da plataforma.")
+Person(ops, "Operação / Admin", "Mantém a stack local, acompanha restore e rotinas de backup.")
 
-System_Boundary(aws_cloud, "AWS Cloud Account") {
-    System(api_system, "Edital Certo API & Workers", "Backend modular e Workers em Lambda.")
-}
+System(system, "Plataforma Edital Certo", "Site público, aplicação web, backend, processamento assíncrono e persistência.")
 
-System_Ext(cloudflare, "Cloudflare (DNS/Edge)", "Terminação SSL e Hospedagem Frontend.")
-System_Ext(asaas, "Asaas", "Gateway de Pagamento e Webhooks.")
+System_Ext(cloudflare, "Cloudflare", "DNS, SSL e Tunnel para expor a stack local com segurança.")
+System_Ext(gcp_files, "GCP Bucket (Arquivos)", "Object storage para arquivos enviados pelo backend e lidos pelo worker.")
+System_Ext(gcp_backup, "GCP Bucket (Backups)", "Armazena backup diário do PostgreSQL e arquivos de recuperação.")
+System_Ext(ai_api, "Gemini / ChatGPT API", "APIs externas usadas nas rotinas de IA.")
+System_Ext(cold_db, "PostgreSQL Cold Standby", "Banco desligado na nuvem, ativado apenas para restore/emergência.")
 
-Rel(user, cloudflare, "Acessa via domínio customizado", "HTTPS")
-Rel(cloudflare, api_system, "Roteia tráfego para a EC2", "HTTPS/JSON")
-Rel(api_system, asaas, "Processa pagamentos", "HTTPS")
+Rel(user, cloudflare, "Acessa domínios públicos", "HTTPS")
+Rel(cloudflare, system, "Encaminha tráfego para a infraestrutura local", "Cloudflare Tunnel")
+
+Rel(system, gcp_files, "Armazena e lê arquivos de trabalho", "HTTPS")
+Rel(system, ai_api, "Executa fluxos de IA", "HTTPS")
+Rel(system, gcp_backup, "Envia backup diário e artefatos de recuperação", "HTTPS")
+
+Rel(ops, system, "Opera e monitora a plataforma", "HTTPS / SSH / Local")
+Rel(ops, cold_db, "Liga somente em cenários de restauração", "Operação manual")
+Rel(gcp_backup, cold_db, "Fonte de restore", "Backup / Restore")
+
 @enduml

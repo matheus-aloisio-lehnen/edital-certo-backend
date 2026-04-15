@@ -15,9 +15,9 @@ coverage
 .env
 .env.*
 **/.env*
-!ops/env/.env.example
+!devops/env/.env.example
 
-# logs
+# observability
 logs
 *.log
 npm-debug.log*
@@ -37,7 +37,7 @@ Thumbs.db
 
 # docker
 docker-compose.yml
-ops/docker/docker-compose.yml
+devops/docker/docker-compose.yml
 
 # temp
 .tmp

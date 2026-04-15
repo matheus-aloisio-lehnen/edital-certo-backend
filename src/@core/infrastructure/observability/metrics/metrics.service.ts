@@ -3,8 +3,8 @@ import { ConfigService } from "@nestjs/config";
 import { Counter, Gauge, Histogram, Meter } from "@opentelemetry/api";
 import { OTLPMetricExporter } from "@opentelemetry/exporter-metrics-otlp-http";
 import { MeterProvider, PeriodicExportingMetricReader } from "@opentelemetry/sdk-metrics";
-import { IMetrics, MetricLabels } from "@domain/@shared/ports/metric.port";
 import { AppConfig, appConfig } from "@cfg/app.config";
+import { IMetrics, MetricLabels } from "@domain/@shared/port/metrics.port";
 
 @Injectable()
 export class Metrics implements IMetrics, OnModuleDestroy {

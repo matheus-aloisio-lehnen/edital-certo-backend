@@ -3,8 +3,8 @@ import { ConfigService } from "@nestjs/config";
 import { SeverityNumber } from "@opentelemetry/api-logs";
 import { OTLPLogExporter } from "@opentelemetry/exporter-logs-otlp-http";
 import { BatchLogRecordProcessor, LoggerProvider } from "@opentelemetry/sdk-logs";
-import { ILogger, LogInput } from "@domain/@shared/ports/logger.port";
 import { AppConfig, appConfig } from "@cfg/app.config";
+import { ILogger, LogInput } from "@domain/@shared/port/logger.port";
 
 @Injectable()
 export class Logger extends ConsoleLogger implements ILogger, OnModuleDestroy {
