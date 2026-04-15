@@ -5,18 +5,19 @@ import { QuotaRenewalCycle } from "@domain/product/constant/quota-renewal-cycle.
 import { Feature } from "@domain/product/entity/feature.entity";
 import { IFeatureRepository, IUpdateFeatureUsecase } from "@domain/product/port/feature.port";
 
-export class UpdateFeatureUseCase implements IUpdateFeatureUsecase {
+export class UpdateFeatureUsecase implements IUpdateFeatureUsecase {
 
     constructor(
         private readonly featureRepository: IFeatureRepository,
         private readonly transactionManager: ITransactionManager,
-    ) {}
+    ) {
+    }
 
     async activate(id: number): Promise<Feature> {
         const feature = await this.getFeature(id);
         feature.activate();
 
-        const metadata = { name: "UpdateFeatureUseCase.activate", data: { id }, metrics: { featureKey: feature.key, planId: String(feature.planId) } };
+        const metadata = { name: "UpdateFeatureUsecase.activate", data: { id }, metrics: { featureKey: feature.key, planId: String(feature.planId) } };
         return this.transactionManager.run(async () => this.featureRepository.save(feature), metadata);
     }
 
@@ -24,16 +25,7 @@ export class UpdateFeatureUseCase implements IUpdateFeatureUsecase {
         const feature = await this.getFeature(id);
         feature.deactivate();
 
-        const metadata = { name: "UpdateFeatureUseCase.deactivate", data: { id }, metrics: { featureKey: feature.key, planId: String(feature.planId) } };
-        return this.transactionManager.run(async () => this.featureRepository.save(feature), metadata);
-    }
-
-    async changeOrder(id: number, order: number): Promise<Feature> {
-        const feature = await this.getFeature(id);
-        feature.changeOrder(order);
-
-        const metadata = { name: "UpdateFeatureUseCase.changeOrder", data: { id, order }, metrics: { featureKey: feature.key, planId: String(feature.planId) } };
-
+        const metadata = { name: "UpdateFeatureUsecase.deactivate", data: { id }, metrics: { featureKey: feature.key, planId: String(feature.planId) } };
         return this.transactionManager.run(async () => this.featureRepository.save(feature), metadata);
     }
 
@@ -41,7 +33,7 @@ export class UpdateFeatureUseCase implements IUpdateFeatureUsecase {
         const feature = await this.getFeature(id);
         feature.hide();
 
-        const metadata = { name: "UpdateFeatureUseCase.hide", data: { id }, metrics: { featureKey: feature.key, planId: String(feature.planId) } };
+        const metadata = { name: "UpdateFeatureUsecase.hide", data: { id }, metrics: { featureKey: feature.key, planId: String(feature.planId) } };
         return this.transactionManager.run(async () => this.featureRepository.save(feature), metadata);
     }
 
@@ -49,7 +41,7 @@ export class UpdateFeatureUseCase implements IUpdateFeatureUsecase {
         const feature = await this.getFeature(id);
         feature.show();
 
-        const metadata = { name: "UpdateFeatureUseCase.show", data: { id }, metrics: { featureKey: feature.key, planId: String(feature.planId) } };
+        const metadata = { name: "UpdateFeatureUsecase.show", data: { id }, metrics: { featureKey: feature.key, planId: String(feature.planId) } };
         return this.transactionManager.run(async () => this.featureRepository.save(feature), metadata);
     }
 

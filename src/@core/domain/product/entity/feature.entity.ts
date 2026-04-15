@@ -12,7 +12,6 @@ export class Feature {
     private readonly _planId?: number;
 
     private readonly _name: string;
-    private _order: number;
     private _hidden: boolean;
     private _isActive: boolean;
 
@@ -26,7 +25,6 @@ export class Feature {
     constructor(data: CreateFeatureProps) {
         this._name = data.name;
         this._key = data.key;
-        this._order = data.order;
         this._planId = data.planId;
 
         this._hidden = data.hidden ?? true;
@@ -59,10 +57,6 @@ export class Feature {
 
     get name() {
         return this._name;
-    }
-
-    get order() {
-        return this._order;
     }
 
     get hidden() {
@@ -103,21 +97,11 @@ export class Feature {
         if (hasValue(this._planId) && this._planId < 1)
             throw new AppException(code.featurePlanIdInvalidError, 400);
 
-        if (this._order < 1)
-            throw new AppException(code.featureOrderNegativeError, 400);
-
         if (this._hasQuota && this._quota < -1)
             throw new AppException(code.featureQuotaOutOfBoundsError, 400);
 
         if (!this._hasQuota && this._quota !== 0)
             throw new AppException(code.featureQuotaDisabledMustBeZeroError, 400);
-    }
-
-    changeOrder(order: number): void {
-        if (order < 1)
-            throw new AppException(code.featureOrderNegativeError, 400);
-
-        this._order = order;
     }
 
     activate(): void {

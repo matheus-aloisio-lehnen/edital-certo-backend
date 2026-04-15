@@ -30,6 +30,9 @@ export class CreatePriceUsecase implements ICreatePriceUsecase {
         return this.transactionManager.run(async () => {
             const plan = await this.getPlan(input.planId);
 
+            if (!plan.externalPlanId)
+                throw new AppException(code.planExternalIdNotFoundError, 400, `ExternalId not found in Plan with id ${plan.id} not found`);
+
             this.productValidatorService.validatePriceKeys([input.key]);
 
             if (input.discount?.key)

@@ -69,6 +69,7 @@ export const createMockQueryRunner = (): QueryRunner => ({
 } as unknown as QueryRunner);
 
 export const createLoggerMock = () => ({
+    write: vi.fn(),
     log: vi.fn(),
     error: vi.fn(),
     warn: vi.fn(),
@@ -82,16 +83,30 @@ export const createMetricsMock = () => ({
     gauge: vi.fn(),
     histogram: vi.fn(),
     timing: vi.fn(),
+    observe: vi.fn(),
 });
 
-export const createTracerMock = () => ({
-    start: vi.fn().mockReturnValue({
+export const createTracerMock = () => {
+    const span = {
         end: vi.fn(),
         setAttribute: vi.fn(),
         setAttributes: vi.fn(),
-    }),
-});
+        recordException: vi.fn(),
+    };
+    return {
+        start: vi.fn().mockReturnValue(span),
+    };
+};
 
 export const createTransactionManagerMock = () => ({
     run: vi.fn((fn) => fn()),
+});
+
+export const createProductGatewayClientMock = () => ({
+    createProduct: vi.fn(),
+    updateProduct: vi.fn(),
+    createPrice: vi.fn(),
+    updatePrice: vi.fn(),
+    createCoupon: vi.fn(),
+    deleteCoupon: vi.fn(),
 });

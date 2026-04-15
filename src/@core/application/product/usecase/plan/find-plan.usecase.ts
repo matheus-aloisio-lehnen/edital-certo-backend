@@ -4,7 +4,7 @@ import { Plan } from "@domain/product/entity/plan.entity";
 import { PlanKey } from "@domain/product/constant/plan-key.constant";
 import { IMetrics } from "@domain/@shared/port/metrics.port";
 
-export class FindPlanUseCase implements IFindPlanUsecase {
+export class FindPlanUsecase implements IFindPlanUsecase {
 
     constructor(
         private readonly planRepository: IPlanRepository,
@@ -28,4 +28,5 @@ export class FindPlanUseCase implements IFindPlanUsecase {
         this.metrics.increment('plan.queried.by-key', { key, found: String(result !== null) });
         return result;
     }
+
 }

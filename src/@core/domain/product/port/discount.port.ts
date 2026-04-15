@@ -21,5 +21,5 @@ export interface ICreateDiscountUsecase {
 }
 
 export interface IDeleteDiscountUsecase {
-    delete(id: number): Promise<boolean>;
+    delete(id: number): Promise<Boolean>;
 }

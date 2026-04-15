@@ -4,7 +4,7 @@ import { IFeatureRepository, IFindFeatureUsecase } from "@domain/product/port/fe
 import { Feature } from "@domain/product/entity/feature.entity";
 import { FeatureKey } from "@domain/product/constant/feature-key.constant";
 
-export class FindFeatureUseCase implements IFindFeatureUsecase {
+export class FindFeatureUsecase implements IFindFeatureUsecase {
 
     constructor(
         private readonly featureRepository: IFeatureRepository,

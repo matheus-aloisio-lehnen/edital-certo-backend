@@ -4,9 +4,8 @@ Table feature {
   id integer [pk, increment]
   plan_id integer [ref: > plan.id]
 
-  key varchar(100) [note: 'Ex: LIBRARY, SUMMARY, WRITE, EVALUATE, AI_HELP, CALENDAR, MULTI_USER']
+  key varchar(100) [note: 'Unique apenas quando is_active = true']
   name varchar(150)
-  order integer
   hidden bool [default: true]
   is_active bool [default: false]
   has_quota bool [default: false]
@@ -14,12 +13,13 @@ Table feature {
   quota_renewal_cycle varchar(20) [note: 'MONTHLY, YEARLY, STATIC']
 
   created_at timestamptz [default: `now()`]
-  updated_at timestamptz
-  deleted_at timestamptz
+  updated_at timestamptz [default: `now()`]
 
   indexes {
-    (plan_id, key) [unique]
-    (plan_id, order) [unique]
+    (plan_id)
+    (plan_id, key)
+    (plan_id, order)
+    (plan_id, is_active)
   }
 }
 
@@ -30,12 +30,11 @@ Table price {
   key varchar(100) [note: 'Ex: FREE_MONTHLY_BRL, START_YEARLY_USD. Ver priceKey no código.']
   currency varchar(3) [note: 'BRL, USD, EUR']
   billing_cycle varchar(30) [note: 'MONTHLY, YEARLY']
-  value bigint [note: 'Valor base em centavos']
+  value integer [note: 'Valor base em centavos']
   is_active bool [default: true, note: 'Apenas um registro ativo por (key, billing_cycle)']
-
+  external_price_id varchar(100) [null]
   created_at timestamptz [default: `now()`]
   updated_at timestamptz
-  deleted_at timestamptz
 
   indexes {
     (plan_id)
@@ -45,22 +44,19 @@ Table price {
 
 Table discount {
   id integer [pk, increment]
-  price_id integer [ref: > price.id]
+  price_id integer [not null, ref: > price.id]
 
-  key varchar(100) [unique]
-  name varchar(100)
-  type varchar(20) [note: 'PERCENT, FIXED']
-  value bigint [note: 'Percentual inteiro ou valor fixo em centavos']
-  strategy varchar(20) [note: 'ONCE, REPEATING, FOREVER']
-  cycle integer [null, note: 'Obrigatorio se duration_type = REPEATING']
+  key varchar(100) [unique, not null]
+  name varchar(150) [not null]
+  type varchar(20) [not null, note: 'PERCENT, FIXED']
+  value integer [not null, note: 'Percentual inteiro ou valor fixo em centavos']
+  duration varchar(20) [not null, note: 'ONCE, REPEATING, FOREVER']
+  count integer [null, note: 'Obrigatório se duration = REPEATING']
 
-  starts_at timestamptz
-  ends_at timestamptz [null]
+  campaign_starts_at timestamptz [not null]
+  campaign_ends_at timestamptz [not null]
 
-  is_active bool [default: true]
-
-  external_coupon_id varchar(100) [null]
-  external_promotion_code_id varchar(100) [null]
+  external_discount_id varchar(100) [null]
 
   created_at timestamptz [default: `now()`]
   updated_at timestamptz
@@ -68,7 +64,7 @@ Table discount {
 
   indexes {
     (price_id)
-    (price_id, is_active)
+    (price_id, duration)
   }
 }
 
@@ -77,10 +73,10 @@ Table plan {
   key varchar(50) [unique, not null, note: 'FREE, START, PRO, TEAMS']
   name varchar(100) [not null]
   is_active boolean [not null, default: true]
+  external_plan_id varchar(100) [null]
 
   created_at timestamptz [default: `now()`]
   updated_at timestamptz [default: `now()`]
-  deleted_at timestamptz
 
   Note: 'Tabela base de planos. Chaves em UPPERCASE para match com o back-end.'
 }
@@ -152,7 +148,7 @@ Table feature_usage {
 }
 
 Table feature_usage_event {
-  id bigint [pk, increment]
+  id integer [pk, increment]
 
   tenant_id integer [ref: > tenant.id]
   user_id integer [ref: > user.id, null]
@@ -244,11 +240,11 @@ Table subscription {
   seats integer [default: 1]
   currency varchar(3)
   discount_type varchar(20) [null]
-  discount_value bigint [null]
-  unit_price bigint
-  price_with_discount bigint
-  total_price bigint
-  total_with_discount bigint
+  discount_value integer [null]
+  unit_price integer
+  price_with_discount integer
+  total_price integer
+  total_with_discount integer
 
   overdue_invoice_id integer [null]
   overdue_since timestamptz
@@ -306,14 +302,14 @@ Table subscription_change {
   from_seats integer [null]
   to_seats integer [null]
 
-  from_unit_price bigint [null]
-  to_unit_price bigint [null]
+  from_unit_price integer [null]
+  to_unit_price integer [null]
 
-  from_total_price bigint [null]
-  to_total_price bigint [null]
+  from_total_price integer [null]
+  to_total_price integer [null]
 
-  from_total_with_discount bigint [null]
-  to_total_with_discount bigint [null]
+  from_total_with_discount integer [null]
+  to_total_with_discount integer [null]
 
   effective_at timestamptz [default: `now()`]
 

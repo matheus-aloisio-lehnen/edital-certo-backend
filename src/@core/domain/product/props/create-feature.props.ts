@@ -5,7 +5,6 @@ export type CreateFeatureProps = {
     name: string;
     key: FeatureKey;
     planId?: number;
-    order: number;
     quotaRenewalCycle: QuotaRenewalCycle;
     hidden?: boolean;
     isActive?: boolean;

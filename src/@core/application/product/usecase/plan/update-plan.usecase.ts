@@ -5,7 +5,7 @@ import { Plan } from "@domain/product/entity/plan.entity";
 import { IPlanRepository, IUpdatePlanUsecase } from "@domain/product/port/plan.port";
 import { IProductGatewayService } from "@domain/product/port/product-payment-gateway.port";
 
-export class UpdatePlanUseCase implements IUpdatePlanUsecase {
+export class UpdatePlanUsecase implements IUpdatePlanUsecase {
 
     constructor(
         private readonly planRepository: IPlanRepository,

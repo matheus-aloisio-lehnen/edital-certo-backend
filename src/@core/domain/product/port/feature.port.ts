@@ -27,7 +27,6 @@ export interface ICreateFeatureUsecase {
 export interface IUpdateFeatureUsecase {
     activate(id: number): Promise<Feature>;
     deactivate(id: number): Promise<Feature>;
-    changeOrder(id: number, order: number): Promise<Feature>;
     hide(id: number): Promise<Feature>;
     show(id: number): Promise<Feature>;
     enableQuota(id: number, quota: number, cycle: QuotaRenewalCycle): Promise<Feature>;

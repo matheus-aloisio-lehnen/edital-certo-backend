@@ -4,7 +4,7 @@ import { Price } from "@domain/product/entity/price.entity";
 import { PriceKey } from "@domain/product/constant/price-key.constant";
 import { IMetrics } from "@domain/@shared/port/metrics.port";
 
-export class FindPriceUseCase implements IFindPriceUsecase {
+export class FindPriceUsecase implements IFindPriceUsecase {
 
     constructor(
         private readonly priceRepository: IPriceRepository,
@@ -19,6 +19,12 @@ export class FindPriceUseCase implements IFindPriceUsecase {
     async findById(id: number): Promise<Price | null> {
         const result = await this.priceRepository.findById(id);
         this.metrics.increment('price.queried.by-id', { found: String(result !== null) }); return result;
+    }
+
+    async findByPlanIdAndKey(planId: number, key: PriceKey): Promise<Price | null> {
+        const result = await this.priceRepository.findByPlanIdAndKey(planId, key);
+        this.metrics.increment('price.queried.by-key', { planId: String(planId), key, found: String(result !== null) });
+        return result;
     }
 
 }

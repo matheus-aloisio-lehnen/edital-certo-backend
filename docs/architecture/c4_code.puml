@@ -7,7 +7,7 @@ title "C4: Code Diagram - Fluxo de Ingestão e Processamento Assíncrono"
 
 package "Backend / NestJS" {
   class HttpController
-  class UploadFileUseCase
+  class UploadFileUsecase
   class StorageService
   class RabbitmqPublisher
   class Logger
@@ -35,12 +35,12 @@ queue "RabbitMQ" as Rabbit
 cloud "GCP Bucket" as Bucket
 cloud "Gemini / ChatGPT API" as AI
 
-HttpController --> UploadFileUseCase : inicia processamento
-UploadFileUseCase --> StorageService : envia arquivo
-UploadFileUseCase --> RabbitmqPublisher : publica job
-UploadFileUseCase --> Logger : log
-UploadFileUseCase --> Metrics : métricas
-UploadFileUseCase --> Tracer : span
+HttpController --> UploadFileUsecase : inicia processamento
+UploadFileUsecase --> StorageService : envia arquivo
+UploadFileUsecase --> RabbitmqPublisher : publica job
+UploadFileUsecase --> Logger : log
+UploadFileUsecase --> Metrics : métricas
+UploadFileUsecase --> Tracer : span
 
 StorageService --> Bucket : upload
 RabbitmqPublisher --> Rabbit : publish

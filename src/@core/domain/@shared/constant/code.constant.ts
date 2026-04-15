@@ -48,7 +48,6 @@ export const code = {
     featureQuotaNotEnabledError: "FEATURE_QUOTA_NOT_ENABLEDS_ERROR",
     featureQuotaOutOfBoundsError: "FEATURE_QUOTA_OUT_OF_BOUNDS_ERROR",
     featureQuotaDisabledMustBeZeroError: "FEATURE_QUOTA_DISABLED_MUST_BE_ZERO_ERROR",
-    featureOrderNegativeError: "FEATURE_ORDER_NEGATIVE_ERROR",
     featureDuplicatedKeyError: "FEATURE_DUPLICATED_KEY_ERROR",
 
     discountIdEmptyError: "DISCOUNT_ID_EMPTY_ERROR",

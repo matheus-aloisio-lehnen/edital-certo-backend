@@ -7,6 +7,8 @@ import { CreateFeatureProps } from "@domain/product/props/create-feature.props";
 import { CreatePlanProps } from "@domain/product/props/create-plan.props";
 import { planKey } from "@domain/product/constant/plan-key.constant";
 import { discountDuration, discountType } from "@domain/product/constant/discount.constant";
+import { CreateDiscountProps } from "@domain/product/props/create-discount.props";
+import { CreatePriceProps } from "@domain/product/props/create-price.props";
 
 export const MockCreatePlans: CreatePlanProps[] = [
     {
@@ -14,13 +16,11 @@ export const MockCreatePlans: CreatePlanProps[] = [
         key: planKey.free,
         features: [
             {
-                order: 1,
                 name: "Biblioteca de editais",
                 key: featureKey.library,
                 quotaRenewalCycle: quotaRenewalCycle.static,
             },
             {
-                order: 2,
                 name: "Resumo de editais",
                 key: featureKey.summary,
                 quotaRenewalCycle: quotaRenewalCycle.monthly,
@@ -28,7 +28,6 @@ export const MockCreatePlans: CreatePlanProps[] = [
                 quota: -1,
             },
             {
-                order: 3,
                 name: "Escrita assistida",
                 key: featureKey.write,
                 quotaRenewalCycle: quotaRenewalCycle.monthly,
@@ -36,7 +35,6 @@ export const MockCreatePlans: CreatePlanProps[] = [
                 quota: 3,
             },
             {
-                order: 4,
                 name: "Avaliação de projetos",
                 key: featureKey.evaluate,
                 quotaRenewalCycle: quotaRenewalCycle.monthly,
@@ -44,7 +42,6 @@ export const MockCreatePlans: CreatePlanProps[] = [
                 quota: 3,
             },
             {
-                order: 5,
                 name: "Assistente de AI",
                 key: featureKey.aiHelp,
                 quotaRenewalCycle: quotaRenewalCycle.monthly,
@@ -52,13 +49,11 @@ export const MockCreatePlans: CreatePlanProps[] = [
                 quota: 0,
             },
             {
-                order: 6,
                 name: "Calendário",
                 key: featureKey.calendar,
                 quotaRenewalCycle: quotaRenewalCycle.static,
             },
             {
-                order: 7,
                 name: "Usuários",
                 key: featureKey.multiUser,
                 quotaRenewalCycle: quotaRenewalCycle.static,
@@ -110,13 +105,11 @@ export const MockCreatePlans: CreatePlanProps[] = [
         key: planKey.start,
         features: [
             {
-                order: 1,
                 name: "Biblioteca de editais",
                 key: featureKey.library,
                 quotaRenewalCycle: quotaRenewalCycle.static,
             },
             {
-                order: 2,
                 name: "Resumo de editais",
                 key: featureKey.summary,
                 quotaRenewalCycle: quotaRenewalCycle.monthly,
@@ -124,7 +117,6 @@ export const MockCreatePlans: CreatePlanProps[] = [
                 quota: -1,
             },
             {
-                order: 3,
                 name: "Escrita assistida",
                 key: featureKey.write,
                 quotaRenewalCycle: quotaRenewalCycle.monthly,
@@ -132,7 +124,6 @@ export const MockCreatePlans: CreatePlanProps[] = [
                 quota: 15,
             },
             {
-                order: 4,
                 name: "Avaliação de projetos",
                 key: featureKey.evaluate,
                 quotaRenewalCycle: quotaRenewalCycle.monthly,
@@ -140,7 +131,6 @@ export const MockCreatePlans: CreatePlanProps[] = [
                 quota: 45,
             },
             {
-                order: 5,
                 name: "Assistente de AI",
                 key: featureKey.aiHelp,
                 quotaRenewalCycle: quotaRenewalCycle.monthly,
@@ -148,13 +138,11 @@ export const MockCreatePlans: CreatePlanProps[] = [
                 quota: 100,
             },
             {
-                order: 6,
                 name: "Calendário",
                 key: featureKey.calendar,
                 quotaRenewalCycle: quotaRenewalCycle.static,
             },
             {
-                order: 7,
                 name: "Usuários",
                 key: featureKey.multiUser,
                 quotaRenewalCycle: quotaRenewalCycle.static,
@@ -215,13 +203,11 @@ export const MockCreatePlans: CreatePlanProps[] = [
         key: planKey.pro,
         features: [
             {
-                order: 1,
                 name: "Biblioteca de editais",
                 key: featureKey.library,
                 quotaRenewalCycle: quotaRenewalCycle.static,
             },
             {
-                order: 2,
                 name: "Resumo de editais",
                 key: featureKey.summary,
                 quotaRenewalCycle: quotaRenewalCycle.monthly,
@@ -229,7 +215,6 @@ export const MockCreatePlans: CreatePlanProps[] = [
                 quota: -1,
             },
             {
-                order: 3,
                 name: "Escrita assistida",
                 key: featureKey.write,
                 quotaRenewalCycle: quotaRenewalCycle.monthly,
@@ -237,7 +222,6 @@ export const MockCreatePlans: CreatePlanProps[] = [
                 quota: 30,
             },
             {
-                order: 4,
                 name: "Avaliação de projetos",
                 key: featureKey.evaluate,
                 quotaRenewalCycle: quotaRenewalCycle.monthly,
@@ -245,7 +229,6 @@ export const MockCreatePlans: CreatePlanProps[] = [
                 quota: 90,
             },
             {
-                order: 5,
                 name: "Assistente de AI",
                 key: featureKey.aiHelp,
                 quotaRenewalCycle: quotaRenewalCycle.monthly,
@@ -253,13 +236,11 @@ export const MockCreatePlans: CreatePlanProps[] = [
                 quota: 1000,
             },
             {
-                order: 6,
                 name: "Calendário",
                 key: featureKey.calendar,
                 quotaRenewalCycle: quotaRenewalCycle.static,
             },
             {
-                order: 7,
                 name: "Usuários",
                 key: featureKey.multiUser,
                 quotaRenewalCycle: quotaRenewalCycle.static,
@@ -322,13 +303,11 @@ export const MockCreatePlans: CreatePlanProps[] = [
         key: planKey.teams,
         features: [
             {
-                order: 1,
                 name: "Biblioteca de editais",
                 key: featureKey.library,
                 quotaRenewalCycle: quotaRenewalCycle.static,
             },
             {
-                order: 2,
                 name: "Resumo de editais",
                 key: featureKey.summary,
                 quotaRenewalCycle: quotaRenewalCycle.monthly,
@@ -336,7 +315,6 @@ export const MockCreatePlans: CreatePlanProps[] = [
                 quota: -1,
             },
             {
-                order: 3,
                 name: "Escrita assistida",
                 key: featureKey.write,
                 quotaRenewalCycle: quotaRenewalCycle.monthly,
@@ -344,7 +322,6 @@ export const MockCreatePlans: CreatePlanProps[] = [
                 quota: 30,
             },
             {
-                order: 4,
                 name: "Avaliação de projetos",
                 key: featureKey.evaluate,
                 quotaRenewalCycle: quotaRenewalCycle.monthly,
@@ -352,7 +329,6 @@ export const MockCreatePlans: CreatePlanProps[] = [
                 quota: 90,
             },
             {
-                order: 5,
                 name: "Assistente de AI",
                 key: featureKey.aiHelp,
                 quotaRenewalCycle: quotaRenewalCycle.monthly,
@@ -360,13 +336,11 @@ export const MockCreatePlans: CreatePlanProps[] = [
                 quota: 3000,
             },
             {
-                order: 6,
                 name: "Calendário",
                 key: featureKey.calendar,
                 quotaRenewalCycle: quotaRenewalCycle.static,
             },
             {
-                order: 7,
                 name: "Usuários",
                 key: featureKey.multiUser,
                 quotaRenewalCycle: quotaRenewalCycle.static,
@@ -436,7 +410,6 @@ export const MockRehydratedPlans = MockCreatePlans.map((plan, planIndex) => ({
     features: plan.features.map((feature, featureIndex) => ({
         id: (planIndex * 10) + featureIndex + 1,
         planId: planIndex + 1,
-        order: feature.order,
         name: feature.name,
         key: feature.key,
         hidden: feature.hidden ?? true,
@@ -486,7 +459,6 @@ export const MockCreateInputPlans: CreatePlanProps[] = MockCreatePlans;
 export const MockFeatureInput: CreateFeatureProps = {
     name: 'AI Help',
     key: featureKey.aiHelp,
-    order: 1,
     planId: 1,
     quotaRenewalCycle: quotaRenewalCycle.monthly,
     hasQuota: true,
@@ -505,7 +477,6 @@ export const MockFeature: RehydratedFeature = {
     id: 1,
     name: 'AI Help',
     key: featureKey.aiHelp,
-    order: 1,
     planId: 1,
     hidden: false,
     isActive: true,
@@ -518,14 +489,12 @@ export const MockFeatureInputList: CreateFeatureProps[] = [
     {
         name: 'F1',
         key: featureKey.calendar,
-        order: 1,
         planId: 1,
         quotaRenewalCycle: quotaRenewalCycle.monthly,
     },
     {
         name: 'F2',
         key: featureKey.summary,
-        order: 2,
         planId: 1,
         quotaRenewalCycle: quotaRenewalCycle.monthly,
         hasQuota: true,
@@ -543,6 +512,84 @@ export const MockFeatureList: RehydratedFeature[] = [
         id: 20,
         name: 'Multi User',
         key: featureKey.multiUser,
-        order: 2,
     },
 ];
+
+export const MockDiscountInput: CreateDiscountProps = {
+    priceId: 1,
+    key: 'SUMMER_SALE',
+    name: 'Summer Sale',
+    type: discountType.percent,
+    value: 20,
+    duration: discountDuration.once,
+    campaignStartsAt: new Date('2026-06-01T00:00:00.000Z'),
+    campaignEndsAt: new Date('2026-08-31T23:59:59.000Z'),
+    externalDiscountId: 'ext_123'
+};
+
+export const MockDiscount = {
+    id: 1,
+    priceId: 1,
+    key: 'SUMMER_SALE',
+    name: 'Summer Sale',
+    type: discountType.percent,
+    value: 20,
+    duration: discountDuration.once,
+    campaignStartsAt: new Date('2026-06-01T00:00:00.000Z'),
+    campaignEndsAt: new Date('2026-08-31T23:59:59.000Z'),
+    externalCouponId: 'ext_coupon_123',
+    externalPromotionCodeId: 'ext_promo_123',
+    isActive: true,
+    createdAt: new Date('2026-05-01T00:00:00.000Z'),
+    updatedAt: new Date('2026-05-01T00:00:00.000Z'),
+    deletedAt: null
+};
+
+export const MockPriceInput: CreatePriceProps = {
+    planId: 1,
+    key: priceKey.startMonthlyBrl,
+    currency: currency.brl,
+    billingCycle: billingCycle.monthly,
+    value: 2999,
+    externalPriceId: 'price_123',
+    discount: {
+        key: 'PROMO10',
+        name: 'Promo 10%',
+        type: discountType.percent,
+        value: 10,
+        duration: discountDuration.once,
+        campaignStartsAt: new Date('2026-01-01'),
+        campaignEndsAt: new Date('2026-12-31'),
+    }
+};
+
+export const MockPrice = {
+    id: 1,
+    planId: 1,
+    key: priceKey.startMonthlyBrl,
+    currency: currency.brl,
+    billingCycle: billingCycle.monthly,
+    value: {
+        amount: 2999,
+        code: currency.brl
+    },
+    discount: MockDiscount,
+    externalPriceId: 'ext_price_123',
+    isActive: true,
+    createdAt: new Date('2026-05-01T00:00:00.000Z'),
+    updatedAt: new Date('2026-05-01T00:00:00.000Z'),
+    deletedAt: null
+};
+
+export const MockPlan = {
+    id: 1,
+    key: planKey.start,
+    name: 'Plan Start',
+    isActive: true,
+    externalProductId: 'ext_prod_123',
+    features: [MockFeature],
+    prices: [MockPrice],
+    createdAt: new Date('2026-05-01T00:00:00.000Z'),
+    updatedAt: new Date('2026-05-01T00:00:00.000Z'),
+    deletedAt: null
+};
