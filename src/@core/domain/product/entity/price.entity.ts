@@ -16,7 +16,7 @@ export class Price {
     private readonly _currency: Currency;
     private readonly _billingCycle: BillingCycle;
     private readonly _value: Money;
-    private readonly _discount?: Discount;
+    private _discount?: Discount;
     private _isActive: boolean;
     private _externalPriceId?: string;
     private readonly _createdAt?: Date;
@@ -91,5 +91,10 @@ export class Price {
     linkExternalPriceId(externalPriceId: string): void {
         this._externalPriceId = externalPriceId;
     }
+
+    attachDiscount(discount: Discount): void {
+        this._discount = discount;
+    }
+
 
 }

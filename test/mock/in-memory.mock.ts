@@ -1,14 +1,18 @@
-import { currency } from "@domain/@shared/type/language.type";
-import { billingCycle } from "@domain/product/constant/billing-cycle.constant";
-import { featureKey } from "@domain/product/constant/feature-key.constant";
-import { priceKey } from "@domain/product/constant/price-key.constant";
-import { quotaRenewalCycle } from "@domain/product/constant/quota-renewal-cycle.constant";
+import { currency, Currency } from "@domain/@shared/type/language.type";
+import { billingCycle, BillingCycle } from "@domain/product/constant/billing-cycle.constant";
+import { featureKey, FeatureKey } from "@domain/product/constant/feature-key.constant";
+import { priceKey, PriceKey } from "@domain/product/constant/price-key.constant";
+import { quotaRenewalCycle, QuotaRenewalCycle } from "@domain/product/constant/quota-renewal-cycle.constant";
 import { CreateFeatureProps } from "@domain/product/props/create-feature.props";
 import { CreatePlanProps } from "@domain/product/props/create-plan.props";
 import { planKey } from "@domain/product/constant/plan-key.constant";
-import { discountDuration, discountType } from "@domain/product/constant/discount.constant";
+import { discountDuration, discountType, DiscountType, DiscountDuration } from "@domain/product/constant/discount.constant";
 import { CreateDiscountProps } from "@domain/product/props/create-discount.props";
 import { CreatePriceProps } from "@domain/product/props/create-price.props";
+import { FeatureModel } from "@persistence/database/postgres/typeorm/model/product/feature.model";
+import { DiscountModel } from "@persistence/database/postgres/typeorm/model/product/discount.model";
+import { PriceModel } from "@persistence/database/postgres/typeorm/model/product/price.model";
+import { PlanModel } from "@persistence/database/postgres/typeorm/model/product/plan.model";
 
 export const MockCreatePlans: CreatePlanProps[] = [
     {
@@ -399,60 +403,75 @@ export const MockCreatePlans: CreatePlanProps[] = [
     },
 ];
 
-export const MockRehydratedPlans = MockCreatePlans.map((plan, planIndex) => ({
-    id: planIndex + 1,
-    name: plan.name,
-    key: plan.key,
-    isActive: true,
-    createdAt: new Date(`2026-01-0${planIndex + 1}T00:00:00.000Z`),
-    updatedAt: new Date(`2026-02-0${planIndex + 1}T00:00:00.000Z`),
-    deletedAt: null,
-    features: plan.features.map((feature, featureIndex) => ({
-        id: (planIndex * 10) + featureIndex + 1,
-        planId: planIndex + 1,
-        name: feature.name,
-        key: feature.key,
-        hidden: feature.hidden ?? true,
-        isActive: feature.isActive ?? false,
-        hasQuota: feature.hasQuota ?? false,
-        quota: feature.quota ?? 0,
-        quotaRenewalCycle: feature.quotaRenewalCycle,
-        createdAt: new Date(`2026-01-${String(featureIndex + 1).padStart(2, '0')}T00:00:00.000Z`),
-        updatedAt: new Date(`2026-02-${String(featureIndex + 1).padStart(2, '0')}T00:00:00.000Z`),
-        deletedAt: null,
-    })),
-    prices: plan.prices.map((price, priceIndex) => ({
-        id: (planIndex * 10) + priceIndex + 1,
-        planId: planIndex + 1,
-        key: price.key,
-        billingCycle: price.billingCycle,
-        currency: price.currency,
-        value: {
-            amount: price.value,
-            code: price.currency,
-        },
-        discount: price.discount ? {
-            id: (planIndex * 100) + priceIndex + 1,
-            priceId: (planIndex * 10) + priceIndex + 1,
-            key: price.discount.key,
-            name: price.discount.name,
-            value: price.discount.value,
-            type: price.discount.type,
-            duration: price.discount.duration,
-            count: price.discount.count ?? null,
-            campaignStartsAt: price.discount.campaignStartsAt,
-            campaignEndsAt: price.discount.campaignEndsAt,
-            externalDiscountId: price.discount.externalDiscountId ?? null,
-            createdAt: new Date(`2026-03-${String(priceIndex + 1).padStart(2, '0')}T00:00:00.000Z`),
-            updatedAt: new Date(`2026-04-${String(priceIndex + 1).padStart(2, '0')}T00:00:00.000Z`),
-            deletedAt: null,
-        } : null,
-        isActive: true,
-        createdAt: new Date(`2026-01-${String(priceIndex + 1).padStart(2, '0')}T00:00:00.000Z`),
-        updatedAt: new Date(`2026-02-${String(priceIndex + 1).padStart(2, '0')}T00:00:00.000Z`),
-        deletedAt: null,
-    })),
-}));
+export const MockRehydratedPlans: PlanModel[] = MockCreatePlans.map((plan, planIndex) => {
+    const planId = planIndex + 1;
+    const model = new PlanModel();
+    model.id = planId;
+    model.name = plan.name;
+    model.key = plan.key;
+    model.isActive = true;
+    model.createdAt = new Date(`2026-01-0${planId}T00:00:00.000Z`);
+    model.updatedAt = new Date(`2026-02-0${planId}T00:00:00.000Z`);
+    model.externalPlanId = null;
+
+    model.features = plan.features.map((feature, featureIndex) => {
+        const fModel = new FeatureModel();
+        fModel.id = (planIndex * 10) + featureIndex + 1;
+        fModel.planId = planId;
+        fModel.name = feature.name;
+        fModel.key = feature.key;
+        fModel.hidden = feature.hidden ?? true;
+        fModel.isActive = feature.isActive ?? false;
+        fModel.hasQuota = feature.hasQuota ?? false;
+        fModel.quota = feature.quota ?? 0;
+        fModel.quotaRenewalCycle = feature.quotaRenewalCycle;
+        fModel.createdAt = new Date(`2026-01-${String(featureIndex + 1).padStart(2, '0')}T00:00:00.000Z`);
+        fModel.updatedAt = new Date(`2026-02-${String(featureIndex + 1).padStart(2, '0')}T00:00:00.000Z`);
+        fModel.plan = model;
+        return fModel;
+    });
+
+    model.prices = plan.prices.map((price, priceIndex) => {
+        const pModel = new PriceModel();
+        pModel.id = (planIndex * 10) + priceIndex + 1;
+        pModel.planId = planId;
+        pModel.key = price.key;
+        pModel.billingCycle = price.billingCycle;
+        pModel.currency = price.currency;
+        pModel.value = price.value;
+        pModel.isActive = true;
+        pModel.externalPriceId = null;
+        pModel.createdAt = new Date(`2026-01-${String(priceIndex + 1).padStart(2, '0')}T00:00:00.000Z`);
+        pModel.updatedAt = new Date(`2026-02-${String(priceIndex + 1).padStart(2, '0')}T00:00:00.000Z`);
+        pModel.plan = model;
+
+        if (price.discount) {
+            const dModel = new DiscountModel();
+            dModel.id = (planIndex * 100) + priceIndex + 1;
+            dModel.priceId = pModel.id;
+            dModel.key = price.discount.key;
+            dModel.name = price.discount.name;
+            dModel.value = price.discount.value;
+            dModel.type = price.discount.type;
+            dModel.duration = price.discount.duration;
+            dModel.count = price.discount.count ?? null;
+            dModel.campaignStartsAt = price.discount.campaignStartsAt;
+            dModel.campaignEndsAt = price.discount.campaignEndsAt;
+            dModel.externalDiscountId = price.discount.externalDiscountId ?? null;
+            dModel.createdAt = new Date(`2026-03-${String(priceIndex + 1).padStart(2, '0')}T00:00:00.000Z`);
+            dModel.updatedAt = new Date(`2026-04-${String(priceIndex + 1).padStart(2, '0')}T00:00:00.000Z`);
+            dModel.deletedAt = null;
+            dModel.price = pModel;
+            pModel.discounts = [dModel];
+        } else {
+            pModel.discounts = [];
+        }
+
+        return pModel;
+    });
+
+    return model;
+});
 
 export const MockCreateInputPlans: CreatePlanProps[] = MockCreatePlans;
 
@@ -463,26 +482,6 @@ export const MockFeatureInput: CreateFeatureProps = {
     quotaRenewalCycle: quotaRenewalCycle.monthly,
     hasQuota: true,
     quota: 50,
-};
-
-type RehydratedFeature = CreateFeatureProps & {
-    id: number;
-    hidden: boolean;
-    isActive: boolean;
-    hasQuota: boolean;
-    quota: number;
-};
-
-export const MockFeature: RehydratedFeature = {
-    id: 1,
-    name: 'AI Help',
-    key: featureKey.aiHelp,
-    planId: 1,
-    hidden: false,
-    isActive: true,
-    hasQuota: true,
-    quota: 50,
-    quotaRenewalCycle: quotaRenewalCycle.monthly,
 };
 
 export const MockFeatureInputList: CreateFeatureProps[] = [
@@ -502,18 +501,20 @@ export const MockFeatureInputList: CreateFeatureProps[] = [
     },
 ];
 
-export const MockFeatureList: RehydratedFeature[] = [
-    {
-        ...MockFeature,
-        id: 10,
-    },
-    {
-        ...MockFeature,
-        id: 20,
-        name: 'Multi User',
-        key: featureKey.multiUser,
-    },
-];
+export const MockFeature: FeatureModel = {
+    id: 1,
+    planId: 1,
+    name: 'AI Help',
+    key: featureKey.aiHelp,
+    hidden: false,
+    isActive: true,
+    hasQuota: true,
+    quota: 50,
+    quotaRenewalCycle: quotaRenewalCycle.monthly,
+    createdAt: new Date('2026-05-01T00:00:00.000Z'),
+    updatedAt: new Date('2026-05-01T00:00:00.000Z'),
+    plan: null as any,
+};
 
 export const MockDiscountInput: CreateDiscountProps = {
     priceId: 1,
@@ -527,7 +528,7 @@ export const MockDiscountInput: CreateDiscountProps = {
     externalDiscountId: 'ext_123'
 };
 
-export const MockDiscount = {
+export const MockDiscount: DiscountModel = {
     id: 1,
     priceId: 1,
     key: 'SUMMER_SALE',
@@ -535,14 +536,14 @@ export const MockDiscount = {
     type: discountType.percent,
     value: 20,
     duration: discountDuration.once,
+    count: null,
     campaignStartsAt: new Date('2026-06-01T00:00:00.000Z'),
     campaignEndsAt: new Date('2026-08-31T23:59:59.000Z'),
-    externalCouponId: 'ext_coupon_123',
-    externalPromotionCodeId: 'ext_promo_123',
-    isActive: true,
+    externalDiscountId: 'ext_123',
     createdAt: new Date('2026-05-01T00:00:00.000Z'),
     updatedAt: new Date('2026-05-01T00:00:00.000Z'),
-    deletedAt: null
+    deletedAt: null,
+    price: null as any,
 };
 
 export const MockPriceInput: CreatePriceProps = {
@@ -563,33 +564,41 @@ export const MockPriceInput: CreatePriceProps = {
     }
 };
 
-export const MockPrice = {
+export const MockPrice: PriceModel = {
     id: 1,
     planId: 1,
     key: priceKey.startMonthlyBrl,
     currency: currency.brl,
     billingCycle: billingCycle.monthly,
-    value: {
-        amount: 2999,
-        code: currency.brl
-    },
-    discount: MockDiscount,
+    value: 2999,
+    discounts: [MockDiscount],
     externalPriceId: 'ext_price_123',
     isActive: true,
     createdAt: new Date('2026-05-01T00:00:00.000Z'),
     updatedAt: new Date('2026-05-01T00:00:00.000Z'),
-    deletedAt: null
+    plan: null as any,
 };
 
-export const MockPlan = {
-    id: 1,
-    key: planKey.start,
-    name: 'Plan Start',
-    isActive: true,
-    externalProductId: 'ext_prod_123',
-    features: [MockFeature],
-    prices: [MockPrice],
-    createdAt: new Date('2026-05-01T00:00:00.000Z'),
-    updatedAt: new Date('2026-05-01T00:00:00.000Z'),
-    deletedAt: null
+export const MockPagination = {
+    offset: 0,
+    limit: 20,
+    orderBy: "prices.discounts.key",
+    sortOrder: "ASC",
+    start: "2025-02-01",
+    end: "2025-03-31",
+    where: {
+        key: { op: "in", args: ["free", "start", "pro"] },
+        name: { op: "ilike", args: "%Plano%" },
+        "prices.key": { op: "like", args: "%YEARLY%" },
+        "prices.currency": "BRL",
+        "prices.value": { op: "gte", args: 1000 },
+        "prices.discounts.key": { op: "ilike", args: "%OFF%" },
+        "prices.discounts.value": { op: "between", args: [10, 30] },
+        "prices.discounts.campaignStartsAt": {
+            op: "between",
+            args: ["2025-02-28", "2025-03-30"],
+        },
+        "prices.discounts.externalDiscountId": null,
+        isActive: true,
+    },
 };

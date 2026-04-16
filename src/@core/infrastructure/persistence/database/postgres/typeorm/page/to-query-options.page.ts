@@ -9,43 +9,23 @@ import {
     LessThanOrEqual,
     Like,
     MoreThan,
-    MoreThanOrEqual, ObjectLiteral, Repository,
+    MoreThanOrEqual,
 } from "typeorm";
 import { startOfDay, endOfDay, parseISO, isValid } from "date-fns";
-import { PageParams, buildPageParams, sortOrder, toSortOrder, WhereClause } from "@domain/@shared/type/page.type";
+import { PageParamsInput, buildPageParams, sortOrder, toSortOrder, WhereClause, PageParams } from "@domain/@shared/type/page.type";
 
-export const toQueryOptions = <T>(rawParams: Partial<PageParams>, allowedOrderBy: readonly string[],): { options: FindManyOptions<T>; offset: number; limit: number } => {
-
-    const params = buildPageParams(rawParams);
-    const offset = params.offset ?? 0;
-    const limit = params.limit ?? 10;
-
-    const where = buildWhere(params.where);
-    const finalWhere = applyDateRange(where, params);
-
-    const order = buildOrder(params, allowedOrderBy);
+export const toQuery = <T>(params: PageParamsInput, allowedOrderBy: string[]) => {
+    const pageParams = buildPageParams(params);
+    const baseWhere = buildWhere(pageParams.where);
+    const where = applyDateRange(baseWhere, pageParams);
+    const order = buildOrder(pageParams, allowedOrderBy);
 
     return {
-        offset,
-        limit,
-        options: {
-            where: finalWhere,
-            order,
-            skip: offset,
-            take: limit,
-        },
+        where,
+        order,
+        skip: pageParams.offset,
+        take: pageParams.limit,
     };
-};
-
-const buildOrder = <T>(params: PageParams, allowed: readonly string[]): FindOptionsOrder<T> => {
-    const fallback = "id";
-    const orderBy = allowed.includes(params.orderBy ?? "")
-        ? params.orderBy!
-        : fallback;
-
-    const direction = toSortOrder(params.sortOrder, sortOrder.desc);
-
-    return { [orderBy]: direction } as FindOptionsOrder<T>;
 };
 
 const buildWhere = (input?: Record<string, any>) => {
@@ -60,63 +40,64 @@ const buildWhere = (input?: Record<string, any>) => {
             continue;
 
         const path = key.split(".");
-        const transformed = transformValue(value);
+        const whereCondition = toWhereCondition(value);
 
-        const nested = buildNested(path, transformed);
-        result = deepMerge(result, nested);
+        const nested = buildNestedObject(path, whereCondition);
+        result = deepMergeObjects(result, nested);
     }
 
     return result;
 };
 
-const buildNested = (path: string[], value: any) => {
-    const root: Record<string, any> = {};
-    let current = root;
+const applyDateRange = (where: Record<string, any>, params: PageParamsInput) => {
+    if (!params.start && !params.end)
+        return where;
 
-    path.forEach((segment, index) => {
-        if (index === path.length - 1) {
-            current[segment] = value;
-            return;
-        }
+    const hasOverride = Object.keys(where).some((key) => key.includes("createdAt"));
 
-        current[segment] = {};
-        current = current[segment];
-    });
+    if (hasOverride)
+        return where;
 
-    return root;
-};
+    const result = { ...where };
 
-const deepMerge = (target: Record<string, any>, source: Record<string, any>) => {
-    const result = { ...target };
+    const start = params.start ? parseISO(params.start) : null;
+    const end = params.end ? parseISO(params.end) : null;
 
-    for (const key in source) {
-        const targetValue = result[key];
-        const sourceValue = source[key];
+    const validStart = start && isValid(start) ? startOfDay(start) : null;
+    const validEnd = end && isValid(end) ? endOfDay(end) : null;
 
-        const targetIsObject = targetValue !== null && typeof targetValue === "object";
-        const sourceIsObject = sourceValue !== null && typeof sourceValue === "object";
+    if (validStart && validEnd) {
+        result["createdAt"] = Between(validStart, validEnd);
+        return result;
+    }
 
-        const targetIsDate = targetValue instanceof Date;
-        const sourceIsDate = sourceValue instanceof Date;
+    if (validStart) {
+        result["createdAt"] = MoreThanOrEqual(validStart);
+        return result;
+    }
 
-        const shouldDeepMerge =
-            targetIsObject &&
-            sourceIsObject &&
-            !targetIsDate &&
-            !sourceIsDate;
-
-        if (shouldDeepMerge) {
-            result[key] = deepMerge(targetValue, sourceValue);
-            continue;
-        }
-
-        result[key] = sourceValue;
+    if (validEnd) {
+        result["createdAt"] = LessThanOrEqual(validEnd);
+        return result;
     }
 
     return result;
 };
 
-const transformValue = (value: any) => {
+const buildOrder = <T>(params: PageParamsInput, allowed: readonly string[],): FindOptionsOrder<T> => {
+    const fallback = "id";
+    const requestedOrderBy = params.orderBy ?? fallback;
+
+    const orderBy = allowed.includes(requestedOrderBy)
+        ? requestedOrderBy
+        : fallback;
+
+    const direction = toSortOrder(params.sortOrder, sortOrder.desc);
+
+    return buildNestedObject(orderBy.split("."), direction) as FindOptionsOrder<T>;
+};
+
+const toWhereCondition = (value: any) => {
     const isObject = typeof value === "object" && value !== null;
     const isWhereClause = isObject && "op" in value;
 
@@ -148,36 +129,48 @@ const transformValue = (value: any) => {
     }
 };
 
-const applyDateRange = (where: Record<string, any>, params: PageParams) => {
-    if (!params.start && !params.end)
-        return where;
+const buildNestedObject = (path: string[], value: any) => {
+    const root: Record<string, any> = {};
+    let current = root;
 
-    const hasOverride = Object.keys(where).some((key) => key.includes("createdAt"));
+    path.forEach((segment, index) => {
+        if (index === path.length - 1) {
+            current[segment] = value;
+            return;
+        }
 
-    if (hasOverride)
-        return where;
+        current[segment] = {};
+        current = current[segment];
+    });
 
-    const result = { ...where };
+    return root;
+};
 
-    const start = params.start ? parseISO(params.start) : null;
-    const end = params.end ? parseISO(params.end) : null;
+const deepMergeObjects = (target: Record<string, any>, source: Record<string, any>) => {
+    const result = { ...target };
 
-    const validStart = start && isValid(start) ? startOfDay(start) : null;
-    const validEnd = end && isValid(end) ? endOfDay(end) : null;
+    for (const key in source) {
+        const targetValue = result[key];
+        const sourceValue = source[key];
 
-    if (validStart && validEnd) {
-        result["createdAt"] = Between(validStart, validEnd);
-        return result;
-    }
+        const targetIsObject = targetValue !== null && typeof targetValue === "object";
+        const sourceIsObject = sourceValue !== null && typeof sourceValue === "object";
 
-    if (validStart) {
-        result["createdAt"] = MoreThanOrEqual(validStart);
-        return result;
-    }
+        const targetIsDate = targetValue instanceof Date;
+        const sourceIsDate = sourceValue instanceof Date;
 
-    if (validEnd) {
-        result["createdAt"] = LessThanOrEqual(validEnd);
-        return result;
+        const shouldDeepMerge =
+            targetIsObject &&
+            sourceIsObject &&
+            !targetIsDate &&
+            !sourceIsDate;
+
+        if (shouldDeepMerge) {
+            result[key] = deepMergeObjects(targetValue, sourceValue);
+            continue;
+        }
+
+        result[key] = sourceValue;
     }
 
     return result;

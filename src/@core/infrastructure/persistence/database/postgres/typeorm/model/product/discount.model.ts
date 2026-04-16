@@ -13,7 +13,7 @@ import { PriceModel } from "@persistence/database/postgres/typeorm/model/product
 
 @Entity("discount")
 @Index("discountPriceIdIndex", ["priceId"])
-@Index("discountUniqueActivePerPrice", ["priceId"], {
+@Index("discountUniqueActivePerPriceKey", ["priceId", "key"], {
     unique: true,
     where: `"deletedAt" IS NULL`,
 })
@@ -23,10 +23,9 @@ export class DiscountModel {
     id!: number;
 
     @Column()
-    @Index()
     priceId!: number;
 
-    @Column({ unique: true })
+    @Column()
     key!: string;
 
     @Column()
@@ -66,10 +65,3 @@ export class DiscountModel {
     @JoinColumn({ name: "priceId" })
     price!: PriceModel;
 }
-
-
-
-
-
-
-

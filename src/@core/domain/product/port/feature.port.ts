@@ -1,12 +1,12 @@
 import { Feature } from "@domain/product/entity/feature.entity";
 import { FeatureKey } from "@domain/product/constant/feature-key.constant";
-import { Page, PageParams } from "@domain/@shared/type/page.type";
+import { Page, PageParamsInput } from "@domain/@shared/type/page.type";
 import { CreateFeatureProps } from "@domain/product/props/create-feature.props";
 import { QuotaRenewalCycle } from "@domain/product/constant/quota-renewal-cycle.constant";
 
 export interface IFeatureRepository {
-    findAll(params: PageParams): Promise<Page<Feature>>;
-    findAllByPlanId(planId: number, params: PageParams): Promise<Page<Feature>>;
+    findAll(params: PageParamsInput): Promise<Page<Feature>>;
+    findAllByPlanId(planId: number, params: PageParamsInput): Promise<Page<Feature>>;
     findById(id: number): Promise<Feature | null>;
     findByPlanIdAndKey(planId: number, key: FeatureKey): Promise<Feature | null>;
     save(feature: Feature): Promise<Feature>;
@@ -14,7 +14,7 @@ export interface IFeatureRepository {
 }
 
 export interface IFindFeatureUsecase {
-    findAll(params: PageParams): Promise<Page<Feature>>;
+    findAll(params: PageParamsInput): Promise<Page<Feature>>;
     findById(id: number): Promise<Feature | null>;
     findByPlanIdAndKey(planId: number, key: FeatureKey): Promise<Feature | null>;
 }

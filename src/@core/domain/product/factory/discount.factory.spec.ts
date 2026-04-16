@@ -19,6 +19,6 @@ describe('DiscountFactory', () => {
         expect(discount.key).toBe(MockDiscount.key);
         expect(discount.type).toBe(MockDiscount.type);
         expect(discount.value).toBe(MockDiscount.value);
-        expect(discount.externalDiscountId).toBe(MockDiscount.externalCouponId);
+        expect(discount.externalDiscountId).toBe(MockDiscount.externalDiscountId);
     });
 });

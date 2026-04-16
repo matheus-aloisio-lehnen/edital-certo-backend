@@ -23,7 +23,7 @@ describe('PriceFactory', () => {
         expect(price.id).toBe(MockPrice.id);
         expect(price.key).toBe(MockPrice.key);
         expect(price.value).toBeInstanceOf(Money);
-        expect(price.value.amount).toBe(MockPrice.value.amount);
+        expect(price.value.amount).toBe(MockPrice.value);
         expect(price.discount).not.toBeNull();
     });
 

@@ -38,4 +38,21 @@ describe('FeatureFactory', () => {
         expect(features[0]).toBeInstanceOf(Feature);
         expect(features[0].id).toBe(MockFeature.id);
     });
+
+    it('should convert a feature to model successfully', () => {
+        const feature = FeatureFactory.rehydrate(MockFeature);
+        const model = FeatureFactory.toModel(feature);
+        expect(model.id).toBe(feature.id);
+        expect(model.name).toBe(feature.name);
+        expect(model.key).toBe(feature.key);
+        expect(model.planId).toBe(feature.planId);
+    });
+
+    it('should convert bulk features to models successfully', () => {
+        const features = FeatureFactory.rehydrateBulk([MockFeature]);
+        const models = FeatureFactory.toModelBulk(features);
+        expect(models).toHaveLength(1);
+        expect(models[0].id).toBe(features[0].id);
+        expect(models[0].name).toBe(features[0].name);
+    });
 });

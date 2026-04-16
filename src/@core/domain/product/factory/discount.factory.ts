@@ -1,32 +1,61 @@
 import { Discount } from "@domain/product/entity/discount.entity";
 import { CreateDiscountProps } from "@domain/product/props/create-discount.props";
+import { DiscountModel } from "@persistence/database/postgres/typeorm/model/product/discount.model";
 
 export class DiscountFactory {
 
-    static create(data: CreateDiscountProps): Discount {
-        return new Discount(data);
+    static create(props: CreateDiscountProps): Discount {
+        return new Discount(props);
     }
 
-    static rehydrate(data: any): Discount {
-        const discount = Object.create(Discount.prototype);
+    static rehydrate(model: DiscountModel): Discount {
+        const discount: Discount = Object.create(Discount.prototype);
         Object.assign(discount, {
-            _id: data.id,
-            _priceId: data.priceId,
-            _key: data.key,
-            _name: data.name,
-            _value: data.value,
-            _type: data.type,
-            _duration: data.duration,
-            _count: data.count,
-            _campaignStartsAt: data.campaignStartsAt,
-            _campaignEndsAt: data.campaignEndsAt,
-            _isActive: data.isActive,
-            _externalDiscountId: data.externalDiscountId || data.externalCouponId,
-            _createdAt: data.createdAt,
-            _updatedAt: data.updatedAt,
-            _deletedAt: data.deletedAt,
+            _id: model.id,
+            _priceId: model.priceId,
+            _key: model.key,
+            _name: model.name,
+            _value: model.value,
+            _type: model.type,
+            _duration: model.duration,
+            _count: model.count,
+            _campaignStartsAt: model.campaignStartsAt,
+            _campaignEndsAt: model.campaignEndsAt,
+            _externalDiscountId: model.externalDiscountId,
+            _createdAt: model.createdAt,
+            _updatedAt: model.updatedAt,
+            _deletedAt: model.deletedAt,
         });
         return discount;
+    }
+
+    static rehydrateBulk(modelList: DiscountModel[]): Discount[] {
+        return modelList.map(model => this.rehydrate(model));
+    }
+
+    static toModel(discount: Discount): DiscountModel {
+        const model: DiscountModel = Object.create(DiscountModel.prototype);
+
+        model.id = discount.id;
+        model.priceId = discount.priceId;
+        model.key = discount.key;
+        model.name = discount.name;
+        model.type = discount.type;
+        model.value = discount.value;
+        model.duration = discount.duration;
+        model.count = discount.count ?? null;
+        model.campaignStartsAt = discount.campaignStartsAt;
+        model.campaignEndsAt = discount.campaignEndsAt;
+        model.externalDiscountId = discount.externalDiscountId ?? null;
+
+        if (discount.deletedAt !== undefined)
+            model.deletedAt = discount.deletedAt;
+
+        return model;
+    }
+
+    static toModelBulk(discountList: Discount[]): DiscountModel[] {
+        return discountList.map(discount => this.toModel(discount));
     }
 
 }
