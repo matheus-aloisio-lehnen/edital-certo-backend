@@ -1,5 +1,5 @@
-import { Feature } from "@domain/product/entity/feature.entity";
-import { CreateFeatureProps } from "@domain/product/props/create-feature.props";
+import { Feature } from "@product/entity/feature.entity";
+import { CreateFeatureProps } from "@product/props/create-feature.props";
 import { FeatureModel } from "@persistence/database/postgres/typeorm/model/product/feature.model";
 
 export class FeatureFactory {

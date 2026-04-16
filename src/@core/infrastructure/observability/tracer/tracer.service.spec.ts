@@ -18,7 +18,7 @@ describe('Tracer', () => {
         expect(service).toBeDefined();
     });
 
-    it('starts a span and applies attributes', () => {
+    it('start should start a span and apply attributes', () => {
         const span = {
             setAttributes: vi.fn(),
             end: vi.fn(),
@@ -40,7 +40,7 @@ describe('Tracer', () => {
         expect(span.end).toHaveBeenCalled();
     });
 
-    it('starts a span without attributes when tracing is disabled', () => {
+    it('start should start a span without attributes when tracing is disabled', () => {
         MockConfigServe = createConfigServiceMock({
             observability: { logs: true, metric: true, trace: false },
         });

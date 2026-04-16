@@ -1,14 +1,14 @@
-import { currency, Currency } from "@domain/@shared/type/language.type";
-import { billingCycle, BillingCycle } from "@domain/product/constant/billing-cycle.constant";
-import { featureKey, FeatureKey } from "@domain/product/constant/feature-key.constant";
-import { priceKey, PriceKey } from "@domain/product/constant/price-key.constant";
-import { quotaRenewalCycle, QuotaRenewalCycle } from "@domain/product/constant/quota-renewal-cycle.constant";
-import { CreateFeatureProps } from "@domain/product/props/create-feature.props";
-import { CreatePlanProps } from "@domain/product/props/create-plan.props";
-import { planKey } from "@domain/product/constant/plan-key.constant";
-import { discountDuration, discountType, DiscountType, DiscountDuration } from "@domain/product/constant/discount.constant";
-import { CreateDiscountProps } from "@domain/product/props/create-discount.props";
-import { CreatePriceProps } from "@domain/product/props/create-price.props";
+import { currency } from "@domain/@shared/type/language.type";
+import { billingCycle } from "@product/constant/billing-cycle.constant";
+import { featureKey } from "@product/constant/feature-key.constant";
+import { priceKey } from "@product/constant/price-key.constant";
+import { quotaRenewalCycle } from "@product/constant/quota-renewal-cycle.constant";
+import { CreateFeatureProps } from "@product/props/create-feature.props";
+import { CreatePlanProps } from "@product/props/create-plan.props";
+import { planKey } from "@product/constant/plan-key.constant";
+import { discountDuration, discountType } from "@product/constant/discount.constant";
+import { CreateDiscountProps } from "@product/props/create-discount.props";
+import { CreatePriceProps } from "@product/props/create-price.props";
 import { FeatureModel } from "@persistence/database/postgres/typeorm/model/product/feature.model";
 import { DiscountModel } from "@persistence/database/postgres/typeorm/model/product/discount.model";
 import { PriceModel } from "@persistence/database/postgres/typeorm/model/product/price.model";
@@ -514,19 +514,7 @@ export const MockFeature: FeatureModel = {
     createdAt: new Date('2026-05-01T00:00:00.000Z'),
     updatedAt: new Date('2026-05-01T00:00:00.000Z'),
     plan: null as any,
-};
-
-export const MockDiscountInput: CreateDiscountProps = {
-    priceId: 1,
-    key: 'SUMMER_SALE',
-    name: 'Summer Sale',
-    type: discountType.percent,
-    value: 20,
-    duration: discountDuration.once,
-    campaignStartsAt: new Date('2026-06-01T00:00:00.000Z'),
-    campaignEndsAt: new Date('2026-08-31T23:59:59.000Z'),
-    externalDiscountId: 'ext_123'
-};
+} as FeatureModel;
 
 export const MockDiscount: DiscountModel = {
     id: 1,
@@ -544,6 +532,45 @@ export const MockDiscount: DiscountModel = {
     updatedAt: new Date('2026-05-01T00:00:00.000Z'),
     deletedAt: null,
     price: null as any,
+} as DiscountModel;
+
+export const MockPrice: PriceModel = {
+    id: 1,
+    planId: 1,
+    key: priceKey.startMonthlyBrl,
+    currency: currency.brl,
+    billingCycle: billingCycle.monthly,
+    value: 2999,
+    discounts: [MockDiscount],
+    externalPriceId: 'ext_price_123',
+    isActive: true,
+    createdAt: new Date('2026-05-01T00:00:00.000Z'),
+    updatedAt: new Date('2026-05-01T00:00:00.000Z'),
+    plan: null as any,
+} as PriceModel;
+
+export const MockPlan: PlanModel = {
+    id: 1,
+    key: planKey.free,
+    name: "Plano Free",
+    isActive: true,
+    externalPlanId: null,
+    features: [MockFeature],
+    prices: [MockPrice],
+    createdAt: new Date('2026-05-01T00:00:00.000Z'),
+    updatedAt: new Date('2026-05-01T00:00:00.000Z'),
+} as PlanModel;
+
+export const MockDiscountInput: CreateDiscountProps = {
+    priceId: 1,
+    key: 'SUMMER_SALE',
+    name: 'Summer Sale',
+    type: discountType.percent,
+    value: 20,
+    duration: discountDuration.once,
+    campaignStartsAt: new Date('2026-06-01T00:00:00.000Z'),
+    campaignEndsAt: new Date('2026-08-31T23:59:59.000Z'),
+    externalDiscountId: 'ext_123'
 };
 
 export const MockPriceInput: CreatePriceProps = {
@@ -562,21 +589,6 @@ export const MockPriceInput: CreatePriceProps = {
         campaignStartsAt: new Date('2026-01-01'),
         campaignEndsAt: new Date('2026-12-31'),
     }
-};
-
-export const MockPrice: PriceModel = {
-    id: 1,
-    planId: 1,
-    key: priceKey.startMonthlyBrl,
-    currency: currency.brl,
-    billingCycle: billingCycle.monthly,
-    value: 2999,
-    discounts: [MockDiscount],
-    externalPriceId: 'ext_price_123',
-    isActive: true,
-    createdAt: new Date('2026-05-01T00:00:00.000Z'),
-    updatedAt: new Date('2026-05-01T00:00:00.000Z'),
-    plan: null as any,
 };
 
 export const MockPagination = {

@@ -1,11 +1,11 @@
 import { code } from "@domain/@shared/constant/code.constant";
 import { AppException } from "@domain/@shared/exception/app.exception";
 import { Currency } from "@domain/@shared/type/language.type";
-import { Discount } from "@domain/product/entity/discount.entity";
+import { Discount } from "@product/entity/discount.entity";
 import { Money } from "@domain/@shared/value-object/money.value-object";
-import { billingCycle, BillingCycle } from "@domain/product/constant/billing-cycle.constant";
-import { PriceKey } from "@domain/product/constant/price-key.constant";
-import { CreatePriceProps } from "@domain/product/props/create-price.props";
+import { billingCycle, BillingCycle } from "@product/constant/billing-cycle.constant";
+import { PriceKey } from "@product/constant/price-key.constant";
+import { CreatePriceProps } from "@product/props/create-price.props";
 import { hasValue } from "@domain/@shared/utils/helper.utils";
 
 export class Price {

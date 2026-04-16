@@ -1,16 +1,15 @@
-
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { Injectable } from "@nestjs/common";
 
 import { BaseRepository } from "@persistence/database/postgres/typeorm/repository/base/base.repository";
-import { Feature } from "@domain/product/entity/feature.entity";
+import { Feature } from "@product/entity/feature.entity";
 import { ClsService } from "nestjs-cls";
-import { Page, PageParamsInput } from "@domain/@shared/type/page.type";
-import { IFeatureRepository } from "@domain/product/port/feature.port";
-import { FeatureKey } from "@domain/product/constant/feature-key.constant";
-import { toQuery } from "@persistence/database/postgres/typeorm/page/to-query-options.page";
-import { FeatureFactory } from "@domain/product/factory/feature.factory";
+import { Page, PageParams } from "@domain/@shared/type/page.type";
+import { IFeatureRepository } from "@product/port/feature.port";
+import { FeatureKey } from "@product/constant/feature-key.constant";
+import { toQuery } from "@persistence/database/postgres/typeorm/page/to-query.page";
+import { FeatureFactory } from "@product/factory/feature.factory";
 import { FeatureModel } from "@persistence/database/postgres/typeorm/model/product/feature.model";
 
 @Injectable()
@@ -23,38 +22,43 @@ export class FeatureRepository extends BaseRepository<FeatureModel> implements I
         super(repo, cls);
     }
 
-    async findAll(params: PageParamsInput = {}): Promise<Page<Feature>> {
-        const { where, order, skip: offset, take: limit } = toQuery<FeatureModel>(params, ["id"]);
+    async findAll(params: PageParams): Promise<Page<Feature>> {
+        const { where, order } = toQuery<FeatureModel>(params, ["id"]);
 
         const [models, count] = await this.repository.findAndCount({
             where,
             order,
-            skip: offset,
-            take: limit,
+            skip: params.offset,
+            take: params.limit,
         });
 
         const list = FeatureFactory.rehydrateBulk(models);
 
-        return { list, count, offset, limit };
+        return { list, count, offset: params.offset, limit: params.limit };
     }
 
-    async findAllByPlanId(planId: number, params: PageParamsInput = {}): Promise<Page<Feature>> {
-        const { where: baseWhere, order, skip: offset, take: limit } = toQuery<FeatureModel>(params, ["id"]);
-
-        const where = baseWhere
-            ? { ...baseWhere, planId }
-            : { planId };
+    async findAllByPlanId(planId: number, params: PageParams): Promise<Page<Feature>> {
+        const { where, order } = toQuery<FeatureModel>(
+            {
+                ...params,
+                where: {
+                    ...params.where,
+                    planId,
+                },
+            },
+            ["id"],
+        );
 
         const [models, count] = await this.repository.findAndCount({
             where,
             order,
-            skip: offset,
-            take: limit,
+            skip: params.offset,
+            take: params.limit,
         });
 
         const list = FeatureFactory.rehydrateBulk(models);
 
-        return { list, count, offset, limit };
+        return { list, count, offset: params.offset, limit: params.limit };
     }
 
     async findById(id: number): Promise<Feature | null> {
@@ -72,13 +76,15 @@ export class FeatureRepository extends BaseRepository<FeatureModel> implements I
     }
 
     async save(feature: Feature): Promise<Feature> {
-        const model = await this.repository.save(feature as any);
-        return FeatureFactory.rehydrate(model);
+        const model = FeatureFactory.toModel(feature);
+        const newFeature = await this.repository.save(model);
+        return FeatureFactory.rehydrate(newFeature);
     }
 
     async saveBulk(features: Feature[]): Promise<Feature[]> {
-        const models = await this.repository.save(features as any);
-        return FeatureFactory.rehydrateBulk(models);
+        const models = FeatureFactory.toModelBulk(features);
+        const newFeatureList = await this.repository.save(models);
+        return FeatureFactory.rehydrateBulk(newFeatureList);
     }
 
 }

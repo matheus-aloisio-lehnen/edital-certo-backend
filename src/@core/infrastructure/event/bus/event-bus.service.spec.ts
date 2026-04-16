@@ -33,7 +33,7 @@ describe('EventBusService', () => {
         service = new EventBusService(eventEmitter, logger as any, metrics as any, tracer as any);
     });
 
-    it('publishes events asynchronously and records success telemetry', async () => {
+    it('publish should publish events asynchronously and records success telemetry', async () => {
         await service.publish({
             name: 'auth.pwd-reset-requested',
             payload: { to: 'user@test.com' },
@@ -66,7 +66,7 @@ describe('EventBusService', () => {
         expect(span.end).toHaveBeenCalled();
     });
 
-    it('records failure telemetry and rethrows handler errors', async () => {
+    it('publish should record failure telemetry and rethrows handler errors', async () => {
         const error = new Error('handler failed');
         (eventEmitter.emitAsync as any).mockRejectedValue(error);
 

@@ -1,6 +1,6 @@
-import { QuotaRenewalCycle } from "@domain/product/constant/quota-renewal-cycle.constant";
-import { FeatureKey } from "@domain/product/constant/feature-key.constant";
-import { CreateFeatureProps } from "@domain/product/props/create-feature.props";
+import { QuotaRenewalCycle } from "@product/constant/quota-renewal-cycle.constant";
+import { FeatureKey } from "@product/constant/feature-key.constant";
+import { CreateFeatureProps } from "@product/props/create-feature.props";
 import { AppException } from "@domain/@shared/exception/app.exception";
 import { code } from "@domain/@shared/constant/code.constant";
 import { hasValue } from "@domain/@shared/utils/helper.utils";

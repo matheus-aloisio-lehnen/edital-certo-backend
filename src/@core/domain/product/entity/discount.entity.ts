@@ -1,7 +1,7 @@
 import { AppException } from "@domain/@shared/exception/app.exception";
 import { code } from "@domain/@shared/constant/code.constant";
-import { discountDuration, DiscountDuration, discountType, DiscountType } from "@domain/product/constant/discount.constant";
-import { CreateDiscountProps } from "@domain/product/props/create-discount.props";
+import { discountDuration, DiscountDuration, discountType, DiscountType } from "@product/constant/discount.constant";
+import { CreateDiscountProps } from "@product/props/create-discount.props";
 import { hasValue } from "@domain/@shared/utils/helper.utils";
 
 export class Discount {

@@ -8,9 +8,7 @@ describe("AppController", () => {
         appController = new AppController(new AppService());
     });
 
-    describe("root", () => {
-        it('should return "Hello World!"', () => {
-            expect(appController.getHello()).toBe("Hello World!");
-        });
+    it('getHello should return "Hello World!"', () => {
+        expect(appController.getHello()).toBe("Hello World!");
     });
 });

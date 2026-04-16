@@ -4,12 +4,12 @@ import { Repository } from "typeorm";
 import { Injectable } from "@nestjs/common";
 
 import { BaseRepository } from "@persistence/database/postgres/typeorm/repository/base/base.repository";
-import { Discount } from "@domain/product/entity/discount.entity";
+import { Discount } from "@product/entity/discount.entity";
 import { ClsService } from "nestjs-cls";
-import { buildPageParams, Page, PageParamsInput } from "@domain/@shared/type/page.type";
-import { IDiscountRepository } from "@domain/product/port/discount.port";
-import { toQuery } from "@persistence/database/postgres/typeorm/page/to-query-options.page";
-import { DiscountFactory } from "@domain/product/factory/discount.factory";
+import { Page, PageParams } from "@domain/@shared/type/page.type";
+import { IDiscountRepository } from "@product/port/discount.port";
+import { toQuery } from "@persistence/database/postgres/typeorm/page/to-query.page";
+import { DiscountFactory } from "@product/factory/discount.factory";
 import { DiscountModel } from "@persistence/database/postgres/typeorm/model/product/discount.model";
 
 @Injectable()
@@ -25,38 +25,49 @@ export class DiscountRepository extends BaseRepository<DiscountModel> implements
         this.allowedOrderBy = ["id", "priceId", "name", "key", "type", "duration", "campaignStartsAt", "campaignEndsAt"]
     }
 
-    async findAll(params: PageParamsInput = {}): Promise<Page<Discount>> {
-        const { where, order, skip: offset, take: limit } = toQuery<DiscountModel>(params, this.allowedOrderBy);
+    async findAll(params: PageParams): Promise<Page<Discount>> {
+        const { where, order } = toQuery<DiscountModel>(params, this.allowedOrderBy);
 
         const [models, count] = await this.repository.findAndCount({
             where,
             order,
-            skip: offset,
-            take: limit,
+            skip: params.offset,
+            take: params.limit,
         });
+
 
         const list = DiscountFactory.rehydrateBulk(models);
 
-        return { list, count, offset, limit };
+        return { list, count, offset: params.offset, limit: params.limit };
     }
 
-    async findAllByPriceId(priceId: number, params: PageParamsInput = {}): Promise<Page<Discount>> {
-        const { where: baseWhere, order, skip: offset, take: limit } = toQuery<DiscountModel>(params, this.allowedOrderBy);
-
-        const where = baseWhere
-            ? { ...baseWhere, priceId }
-            : { priceId };
+    async findAllByPriceId(priceId: number, params: PageParams): Promise<Page<Discount>> {
+        const query = toQuery<DiscountModel>(
+            {
+                ...params,
+                where: {
+                    ...params.where,
+                    priceId,
+                },
+            },
+            this.allowedOrderBy,
+        );
 
         const [models, count] = await this.repository.findAndCount({
-            where,
-            order,
-            skip: offset,
-            take: limit,
+            where: query.where,
+            order: query.order,
+            skip: params.offset,
+            take: params.limit,
         });
 
         const list = DiscountFactory.rehydrateBulk(models);
 
-        return { list, count, offset, limit };
+        return {
+            list,
+            count,
+            offset: params.offset,
+            limit: params.limit,
+        };
     }
 
     async findById(id: number): Promise<Discount | null> {

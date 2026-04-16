@@ -3,13 +3,13 @@ import { In, Repository } from "typeorm";
 import { Injectable } from "@nestjs/common";
 
 import { BaseRepository } from "@persistence/database/postgres/typeorm/repository/base/base.repository";
-import { Plan } from "@domain/product/entity/plan.entity";
+import { Plan } from "@product/entity/plan.entity";
 import { ClsService } from "nestjs-cls";
-import { Page, PageParamsInput } from "@domain/@shared/type/page.type";
-import { IPlanRepository } from "@domain/product/port/plan.port";
-import { PlanKey } from "@domain/product/constant/plan-key.constant";
-import { toQuery } from "@persistence/database/postgres/typeorm/page/to-query-options.page";
-import { PlanFactory } from "@domain/product/factory/plan.factory";
+import { Page, PageParams } from "@domain/@shared/type/page.type";
+import { IPlanRepository } from "@product/port/plan.port";
+import { PlanKey } from "@product/constant/plan-key.constant";
+import { toQuery } from "@persistence/database/postgres/typeorm/page/to-query.page";
+import { PlanFactory } from "@product/factory/plan.factory";
 import { PlanModel } from "@persistence/database/postgres/typeorm/model/product/plan.model";
 
 @Injectable()
@@ -22,20 +22,20 @@ export class PlanRepository extends BaseRepository<PlanModel> implements IPlanRe
         super(repo, cls);
     }
 
-    async findAll(params: PageParamsInput = {}): Promise<Page<Plan>> {
-        const { where, order, skip: offset, take: limit } = toQuery<PlanModel>(params, ["id"]);
+    async findAll(params: PageParams): Promise<Page<Plan>> {
+        const { where, order } = toQuery<PlanModel>(params, ["id"]);
 
         const [models, count] = await this.repository.findAndCount({
             where,
             order,
-            skip: offset,
-            take: limit,
+            skip: params.offset,
+            take: params.limit,
             relations: ["features", "prices", "prices.discounts"],
         });
 
         const list = PlanFactory.rehydrateBulk(models);
 
-        return { list, count, offset, limit };
+        return { list, count, offset: params.offset, limit: params.limit };
     }
 
     async findAllByKey(keys: PlanKey[]): Promise<Plan[]> {

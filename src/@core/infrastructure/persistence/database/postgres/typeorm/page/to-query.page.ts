@@ -11,21 +11,15 @@ import {
     MoreThan,
     MoreThanOrEqual,
 } from "typeorm";
-import { startOfDay, endOfDay, parseISO, isValid } from "date-fns";
-import { PageParamsInput, buildPageParams, sortOrder, toSortOrder, WhereClause, PageParams } from "@domain/@shared/type/page.type";
+import { startOfDay, endOfDay, isValid } from "date-fns";
+import { sortOrder, toSortOrder, WhereClause, PageParams } from "@domain/@shared/type/page.type";
 
-export const toQuery = <T>(params: PageParamsInput, allowedOrderBy: string[]) => {
-    const pageParams = buildPageParams(params);
-    const baseWhere = buildWhere(pageParams.where);
-    const where = applyDateRange(baseWhere, pageParams);
-    const order = buildOrder(pageParams, allowedOrderBy);
+export const toQuery = <T>(params: PageParams, allowedOrderBy: string[]): FindManyOptions => {
+    const baseWhere = buildWhere(params.where);
+    const where = applyDateRange(baseWhere, params);
+    const order = buildOrder(params, allowedOrderBy);
 
-    return {
-        where,
-        order,
-        skip: pageParams.offset,
-        take: pageParams.limit,
-    };
+    return { where, order };
 };
 
 const buildWhere = (input?: Record<string, any>) => {
@@ -49,7 +43,7 @@ const buildWhere = (input?: Record<string, any>) => {
     return result;
 };
 
-const applyDateRange = (where: Record<string, any>, params: PageParamsInput) => {
+const applyDateRange = (where: Record<string, any>, params: PageParams) => {
     if (!params.start && !params.end)
         return where;
 
@@ -60,11 +54,16 @@ const applyDateRange = (where: Record<string, any>, params: PageParamsInput) => 
 
     const result = { ...where };
 
-    const start = params.start ? parseISO(params.start) : null;
-    const end = params.end ? parseISO(params.end) : null;
+    const start = params.start ?? null;
+    const end = params.end ?? null;
 
-    const validStart = start && isValid(start) ? startOfDay(start) : null;
-    const validEnd = end && isValid(end) ? endOfDay(end) : null;
+    const validStart = start && isValid(start)
+        ? startOfDay(start)
+        : null;
+
+    const validEnd = end && isValid(end)
+        ? endOfDay(end)
+        : null;
 
     if (validStart && validEnd) {
         result["createdAt"] = Between(validStart, validEnd);
@@ -84,7 +83,7 @@ const applyDateRange = (where: Record<string, any>, params: PageParamsInput) => 
     return result;
 };
 
-const buildOrder = <T>(params: PageParamsInput, allowed: readonly string[],): FindOptionsOrder<T> => {
+const buildOrder = <T>(params: PageParams, allowed: readonly string[],): FindOptionsOrder<T> => {
     const fallback = "id";
     const requestedOrderBy = params.orderBy ?? fallback;
 

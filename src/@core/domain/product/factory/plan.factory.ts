@@ -1,7 +1,7 @@
-import { Plan } from "@domain/product/entity/plan.entity";
-import { FeatureFactory } from "@domain/product/factory/feature.factory";
-import { PriceFactory } from "@domain/product/factory/price.factory";
-import { CreatePlanProps } from "@domain/product/props/create-plan.props";
+import { Plan } from "@product/entity/plan.entity";
+import { FeatureFactory } from "@product/factory/feature.factory";
+import { PriceFactory } from "@product/factory/price.factory";
+import { CreatePlanProps } from "@product/props/create-plan.props";
 import { PlanModel } from "@persistence/database/postgres/typeorm/model/product/plan.model";
 
 export class PlanFactory {

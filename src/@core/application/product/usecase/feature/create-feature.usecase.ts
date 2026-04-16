@@ -1,9 +1,9 @@
-import { ICreateFeatureUsecase, IFeatureRepository } from "@domain/product/port/feature.port";
+import { ICreateFeatureUsecase, IFeatureRepository } from "@product/port/feature.port";
 import { ITransactionManager } from "@domain/@shared/port/transaction.port";
-import { CreateFeatureProps } from "@domain/product/props/create-feature.props";
-import { Feature } from "@domain/product/entity/feature.entity";
-import { FeatureFactory } from "@domain/product/factory/feature.factory";
-import { IProductValidatorService } from "@domain/product/port/product-validator.port";
+import { CreateFeatureProps } from "@product/props/create-feature.props";
+import { Feature } from "@product/entity/feature.entity";
+import { FeatureFactory } from "@product/factory/feature.factory";
+import { IProductValidatorService } from "@product/port/product-validator.port";
 
 export class CreateFeatureUsecase implements ICreateFeatureUsecase{
 

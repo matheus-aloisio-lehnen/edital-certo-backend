@@ -1,4 +1,4 @@
-import { emailBaseTemplate } from "@app/@core/infrastructure/transport/email/template/base.template";
+import { emailBaseTemplate } from "@transport/email/template/base.template";
 
 export const authPwdResetConfirmedTemplate = (lang: string, translated: any, payload: any): string => {
     const content = `

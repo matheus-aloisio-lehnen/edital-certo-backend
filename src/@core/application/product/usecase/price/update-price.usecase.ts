@@ -1,9 +1,9 @@
 import { AppException } from "@domain/@shared/exception/app.exception";
 import { code } from "@domain/@shared/constant/code.constant";
 import { ITransactionManager } from "@domain/@shared/port/transaction.port";
-import { Price } from "@domain/product/entity/price.entity";
-import { IPriceRepository, IUpdatePriceUsecase } from "@domain/product/port/price.port";
-import { IProductGatewayService } from "@domain/product/port/product-payment-gateway.port";
+import { Price } from "@product/entity/price.entity";
+import { IPriceRepository, IUpdatePriceUsecase } from "@product/port/price.port";
+import { IProductGatewayService } from "@product/port/product-payment-gateway.port";
 
 export class UpdatePriceUsecase implements IUpdatePriceUsecase {
 
@@ -11,7 +11,8 @@ export class UpdatePriceUsecase implements IUpdatePriceUsecase {
         private readonly priceRepository: IPriceRepository,
         private readonly transactionManager: ITransactionManager,
         private readonly productGatewayService: IProductGatewayService,
-    ) {}
+    ) {
+    }
 
     async deactivate(id: number): Promise<Price> {
         const price = await this.priceRepository.findById(id);

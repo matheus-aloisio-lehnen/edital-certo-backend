@@ -36,7 +36,7 @@ describe('AllExceptionsFilter', () => {
         expect(filter).toBeDefined();
     });
 
-    it('returns the mapped response for AppException', () => {
+    it('catch should return the mapped response for AppException', () => {
         filter.catch(new AppException(
             code.internalServerError,
             HttpStatus.BAD_REQUEST,
@@ -75,7 +75,7 @@ describe('AllExceptionsFilter', () => {
         expect(end).toHaveBeenCalled();
     });
 
-    it('returns the mapped response for HttpException', () => {
+    it('catch should return the mapped response for HttpException', () => {
         filter.catch(new HttpException({
             code: 'VALIDATION_ERROR',
             message: 'Invalid payload',
@@ -92,7 +92,7 @@ describe('AllExceptionsFilter', () => {
         expect(tracer.start).toHaveBeenCalled();
     });
 
-    it('returns the default response for unexpected errors', () => {
+    it('catch should return the default response for unexpected errors', () => {
         filter.catch(new Error('boom'), host);
 
         expect(status).toHaveBeenCalledWith(HttpStatus.INTERNAL_SERVER_ERROR);

@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { Feature } from '@domain/product/entity/feature.entity';
-import { quotaRenewalCycle } from '@domain/product/constant/quota-renewal-cycle.constant';
+import { Feature } from '@product/entity/feature.entity';
+import { quotaRenewalCycle } from '@product/constant/quota-renewal-cycle.constant';
 import { MockFeatureInput } from '@mock/in-memory.mock';
 
-describe('Feature Entity', () => {
-    it('should create a feature successfully', () => {
+describe('Feature', () => {
+    it('constructor should create a feature successfully', () => {
         const feature = new Feature(MockFeatureInput);
 
         expect(feature.name).toBe(MockFeatureInput.name);
@@ -17,23 +17,23 @@ describe('Feature Entity', () => {
         expect(feature.hidden).toBe(true); // default from constructor
     });
 
-    it('should throw error if name is empty', () => {
+    it('validate should throw error if name is empty', () => {
         expect(() => new Feature({ ...MockFeatureInput, name: '' })).toThrow();
     });
 
-    it('should throw error if key is empty', () => {
+    it('validate should throw error if key is empty', () => {
         expect(() => new Feature({ ...MockFeatureInput, key: '' as any })).toThrow();
     });
 
-    it('should throw error if quota is out of bounds when hasQuota is true', () => {
+    it('validate should throw error if quota is out of bounds when hasQuota is true', () => {
         expect(() => new Feature({ ...MockFeatureInput, hasQuota: true, quota: -2 })).toThrow();
     });
 
-    it('should throw error if quota is not zero when hasQuota is false', () => {
+    it('validate should throw error if quota is not zero when hasQuota is false', () => {
         expect(() => new Feature({ ...MockFeatureInput, hasQuota: false, quota: 10 })).toThrow();
     });
 
-    it('should activate and deactivate', () => {
+    it('activate should activate and deactivate should deactivate', () => {
         const feature = new Feature(MockFeatureInput);
         feature.activate();
         expect(feature.isActive).toBe(true);
@@ -41,7 +41,7 @@ describe('Feature Entity', () => {
         expect(feature.isActive).toBe(false);
     });
 
-    it('should hide and show', () => {
+    it('show should show and hide should hide', () => {
         const feature = new Feature(MockFeatureInput);
         feature.show();
         expect(feature.hidden).toBe(false);
@@ -49,7 +49,7 @@ describe('Feature Entity', () => {
         expect(feature.hidden).toBe(true);
     });
 
-    it('should enable quota', () => {
+    it('enableQuota should enable quota', () => {
         const feature = new Feature({ ...MockFeatureInput, hasQuota: false, quota: 0 });
         feature.enableQuota(100, quotaRenewalCycle.monthly);
         expect(feature.hasQuota).toBe(true);
@@ -57,39 +57,39 @@ describe('Feature Entity', () => {
         expect(feature.quotaRenewalCycle).toBe(quotaRenewalCycle.monthly);
     });
 
-    it('should disable quota', () => {
+    it('disableQuota should disable quota', () => {
         const feature = new Feature(MockFeatureInput);
         feature.disableQuota();
         expect(feature.hasQuota).toBe(false);
         expect(feature.quota).toBe(0);
     });
 
-    it('should change quota', () => {
+    it('changeQuota should change quota', () => {
         const feature = new Feature(MockFeatureInput);
         feature.changeQuota(200);
         expect(feature.quota).toBe(200);
     });
 
-    it('should throw error when changing quota if not enabled', () => {
+    it('changeQuota should throw error when changing quota if not enabled', () => {
         const feature = new Feature({ ...MockFeatureInput, hasQuota: false, quota: 0 });
         expect(() => feature.changeQuota(100)).toThrow();
     });
 
-    it('should throw error when changing quota to out of bounds', () => {
+    it('changeQuota should throw error when changing quota to out of bounds', () => {
         const feature = new Feature(MockFeatureInput);
         expect(() => feature.changeQuota(-2)).toThrow();
     });
 
-    it('should throw error when planId is less than 1', () => {
+    it('validate should throw error when planId is less than 1', () => {
         expect(() => new Feature({ ...MockFeatureInput, planId: 0 })).toThrow();
     });
 
-    it('should throw error if id is accessed but not set', () => {
+    it('id getter should throw error if id is not set', () => {
         const feature = new Feature(MockFeatureInput);
         expect(() => feature.id).toThrow();
     });
 
-    it('should throw error if planId is accessed but not set', () => {
+    it('planId getter should throw error if planId is not set', () => {
         const feature = new Feature({ ...MockFeatureInput, planId: undefined });
         expect(() => feature.planId).toThrow();
     });

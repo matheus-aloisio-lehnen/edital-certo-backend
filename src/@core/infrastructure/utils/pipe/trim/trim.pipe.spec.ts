@@ -9,7 +9,7 @@ describe("TrimPipe", () => {
         pipe = new TrimPipe();
     });
 
-    it("should trim strings in body root fields", () => {
+    it("transform should trim strings in body root fields", () => {
         const metadata: ArgumentMetadata = { type: "body" };
 
         const value = {
@@ -25,7 +25,7 @@ describe("TrimPipe", () => {
         });
     });
 
-    it("should trim nested objects", () => {
+    it("transform should trim nested objects", () => {
         const metadata: ArgumentMetadata = { type: "body" };
 
         const value = {
@@ -49,7 +49,7 @@ describe("TrimPipe", () => {
         });
     });
 
-    it("should trim arrays", () => {
+    it("transform should trim arrays", () => {
         const metadata: ArgumentMetadata = { type: "body" };
 
         const value = {
@@ -63,7 +63,7 @@ describe("TrimPipe", () => {
         });
     });
 
-    it("should trim nested arrays and objects", () => {
+    it("transform should trim nested arrays and objects", () => {
         const metadata: ArgumentMetadata = { type: "body" };
 
         const value = {
@@ -85,7 +85,7 @@ describe("TrimPipe", () => {
         });
     });
 
-    it("should keep non-string values unchanged", () => {
+    it("transform should keep non-string values unchanged", () => {
         const metadata: ArgumentMetadata = { type: "body" };
 
         const value = {
@@ -100,7 +100,7 @@ describe("TrimPipe", () => {
         expect(result).toEqual(value);
     });
 
-    it("should return value unchanged when props is not body", () => {
+    it("transform should return value unchanged when props is not body", () => {
         const queryMetadata: ArgumentMetadata = { type: "query" };
         const paramMetadata: ArgumentMetadata = { type: "param" };
 
@@ -112,7 +112,7 @@ describe("TrimPipe", () => {
         expect(pipe.transform(value, paramMetadata)).toBe(value);
     });
 
-    it("should trim a body string", () => {
+    it("transform should trim a body string", () => {
         const metadata: ArgumentMetadata = { type: "body" };
 
         const value = "  Matheus  ";
@@ -122,7 +122,7 @@ describe("TrimPipe", () => {
         expect(result).toBe("Matheus");
     });
 
-    it("should return null unchanged", () => {
+    it("transform should return null unchanged", () => {
         const metadata: ArgumentMetadata = { type: "body" };
 
         const result = pipe.transform(null, metadata);

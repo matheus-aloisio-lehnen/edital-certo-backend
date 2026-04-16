@@ -1,4 +1,4 @@
-import { DiscountDuration, DiscountType } from "@domain/product/constant/discount.constant";
+import { DiscountDuration, DiscountType } from "@product/constant/discount.constant";
 
 export type CreateDiscountProps = {
     priceId?: number;

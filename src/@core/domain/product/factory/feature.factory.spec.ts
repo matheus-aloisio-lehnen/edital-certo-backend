@@ -1,24 +1,24 @@
 import { describe, it, expect } from 'vitest';
 import { FeatureFactory } from './feature.factory';
 import { MockFeatureInput, MockFeatureInputList, MockFeature } from '@mock/in-memory.mock';
-import { Feature } from '@domain/product/entity/feature.entity';
+import { Feature } from '@product/entity/feature.entity';
 
 describe('FeatureFactory', () => {
-    it('should create a feature successfully', () => {
+    it('create should create a feature successfully', () => {
         const feature = FeatureFactory.create(MockFeatureInput);
         expect(feature).toBeInstanceOf(Feature);
         expect(feature.name).toBe(MockFeatureInput.name);
         expect(feature.key).toBe(MockFeatureInput.key);
     });
 
-    it('should create bulk features successfully', () => {
+    it('createBulk should create bulk features successfully', () => {
         const features = FeatureFactory.createBulk(MockFeatureInputList);
         expect(features).toHaveLength(MockFeatureInputList.length);
         expect(features[0]).toBeInstanceOf(Feature);
         expect(features[1].name).toBe(MockFeatureInputList[1].name);
     });
 
-    it('should rehydrate a feature successfully', () => {
+    it('rehydrate should rehydrate a feature successfully', () => {
         const feature = FeatureFactory.rehydrate(MockFeature);
         expect(feature).toBeInstanceOf(Feature);
         expect(feature.id).toBe(MockFeature.id);
@@ -32,14 +32,14 @@ describe('FeatureFactory', () => {
         expect(feature.quotaRenewalCycle).toBe(MockFeature.quotaRenewalCycle);
     });
 
-    it('should rehydrate bulk features successfully', () => {
+    it('rehydrateBulk should rehydrate bulk features successfully', () => {
         const features = FeatureFactory.rehydrateBulk([MockFeature]);
         expect(features).toHaveLength(1);
         expect(features[0]).toBeInstanceOf(Feature);
         expect(features[0].id).toBe(MockFeature.id);
     });
 
-    it('should convert a feature to model successfully', () => {
+    it('toModel should convert a feature to model successfully', () => {
         const feature = FeatureFactory.rehydrate(MockFeature);
         const model = FeatureFactory.toModel(feature);
         expect(model.id).toBe(feature.id);
@@ -48,7 +48,7 @@ describe('FeatureFactory', () => {
         expect(model.planId).toBe(feature.planId);
     });
 
-    it('should convert bulk features to models successfully', () => {
+    it('toModelBulk should convert bulk features to models successfully', () => {
         const features = FeatureFactory.rehydrateBulk([MockFeature]);
         const models = FeatureFactory.toModelBulk(features);
         expect(models).toHaveLength(1);

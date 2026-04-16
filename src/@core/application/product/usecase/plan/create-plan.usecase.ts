@@ -1,10 +1,10 @@
 import { ITransactionManager } from "@domain/@shared/port/transaction.port";
-import { Plan } from "@domain/product/entity/plan.entity";
-import { PlanFactory } from "@domain/product/factory/plan.factory";
-import { ICreatePlanUsecase, IPlanRepository } from "@domain/product/port/plan.port";
-import { CreatePlanProps } from "@domain/product/props/create-plan.props";
-import { IProductGatewayService } from "@domain/product/port/product-payment-gateway.port";
-import { IProductValidatorService } from "@domain/product/port/product-validator.port";
+import { Plan } from "@product/entity/plan.entity";
+import { PlanFactory } from "@product/factory/plan.factory";
+import { ICreatePlanUsecase, IPlanRepository } from "@product/port/plan.port";
+import { CreatePlanProps } from "@product/props/create-plan.props";
+import { IProductGatewayService } from "@product/port/product-payment-gateway.port";
+import { IProductValidatorService } from "@product/port/product-validator.port";
 
 export class CreatePlanUsecase implements ICreatePlanUsecase {
 
@@ -13,7 +13,8 @@ export class CreatePlanUsecase implements ICreatePlanUsecase {
         private readonly transactionManager: ITransactionManager,
         private readonly productGatewayService: IProductGatewayService,
         private readonly productValidatorService: IProductValidatorService,
-    ) {}
+    ) {
+    }
 
     async create(input: CreatePlanProps): Promise<Plan> {
         const metadata = {

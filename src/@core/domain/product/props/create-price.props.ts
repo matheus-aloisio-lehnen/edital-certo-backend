@@ -1,7 +1,7 @@
 import { Currency } from "@domain/@shared/type/language.type";
-import { BillingCycle } from "@domain/product/constant/billing-cycle.constant";
-import { PriceKey } from "@domain/product/constant/price-key.constant";
-import { CreateDiscountProps } from "@domain/product/props/create-discount.props";
+import { BillingCycle } from "@product/constant/billing-cycle.constant";
+import { PriceKey } from "@product/constant/price-key.constant";
+import { CreateDiscountProps } from "@product/props/create-discount.props";
 
 export type CreatePriceProps = {
     planId?: number;

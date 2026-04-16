@@ -1,5 +1,5 @@
-import { QuotaRenewalCycle } from "@domain/product/constant/quota-renewal-cycle.constant";
-import { FeatureKey } from "@domain/product/constant/feature-key.constant";
+import { QuotaRenewalCycle } from "@product/constant/quota-renewal-cycle.constant";
+import { FeatureKey } from "@product/constant/feature-key.constant";
 
 export type CreateFeatureProps = {
     name: string;

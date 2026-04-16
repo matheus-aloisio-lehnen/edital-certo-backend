@@ -1,7 +1,7 @@
-import { IFindPlanUsecase, IPlanRepository } from "@domain/product/port/plan.port";
-import { Page, PageParamsInput } from "@domain/@shared/type/page.type";
-import { Plan } from "@domain/product/entity/plan.entity";
-import { PlanKey } from "@domain/product/constant/plan-key.constant";
+import { IFindPlanUsecase, IPlanRepository } from "@product/port/plan.port";
+import { Page, PageParams } from "@domain/@shared/type/page.type";
+import { Plan } from "@product/entity/plan.entity";
+import { PlanKey } from "@product/constant/plan-key.constant";
 import { IMetrics } from "@domain/@shared/port/metrics.port";
 
 export class FindPlanUsecase implements IFindPlanUsecase {
@@ -9,9 +9,10 @@ export class FindPlanUsecase implements IFindPlanUsecase {
     constructor(
         private readonly planRepository: IPlanRepository,
         private readonly metrics: IMetrics,
-    ) {}
+    ) {
+    }
 
-    async findAll(params: PageParamsInput): Promise<Page<Plan>> {
+    async findAll(params: PageParams): Promise<Page<Plan>> {
         const result = await this.planRepository.findAll(params);
         this.metrics.increment('plan.queried.all', { count: String(result.list.length) });
         return result;

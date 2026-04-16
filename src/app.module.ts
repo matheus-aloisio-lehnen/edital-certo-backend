@@ -6,10 +6,10 @@ import { AppService } from "@app/app.service";
 import { provideGlobalPipes } from "@cfg/pipes.options";
 import { provideGlobalFilters } from "@cfg/filters.options";
 import { I18nModule } from "nestjs-i18n";
-import { EventModule } from "@event/module/event.module";
-import { ObservabilityModule } from "@observability/module/observability.module";
-import { PersistenceModule } from "@persistence/module/persistence.module";
-import { TransportModule } from "@transport/module/transport.module";
+import { EventModule } from "@event/event.module";
+import { ObservabilityModule } from "@observability/observability.module";
+import { PersistenceModule } from "@persistence/persistence.module";
+import { TransportModule } from "@transport/transport.module";
 import { ClsModule } from 'nestjs-cls';
 
 import path from "node:path";

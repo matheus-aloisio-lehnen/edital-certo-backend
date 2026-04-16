@@ -1,9 +1,9 @@
 import { AppException } from "@domain/@shared/exception/app.exception";
 import { code } from "@domain/@shared/constant/code.constant";
-import { PlanKey } from "@domain/product/constant/plan-key.constant";
-import { PriceKey } from "@domain/product/constant/price-key.constant";
-import { FeatureKey } from "@domain/product/constant/feature-key.constant";
-import { IProductValidatorService } from "@domain/product/port/product-validator.port";
+import { PlanKey } from "@product/constant/plan-key.constant";
+import { PriceKey } from "@product/constant/price-key.constant";
+import { FeatureKey } from "@product/constant/feature-key.constant";
+import { IProductValidatorService } from "@product/port/product-validator.port";
 
 export class ProductValidatorService implements IProductValidatorService {
 

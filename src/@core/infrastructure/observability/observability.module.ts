@@ -3,8 +3,8 @@ import { Logger } from "@observability/logger/logger.service";
 import { Metrics } from "@observability/metrics/metrics.service";
 import { Tracer } from "@observability/tracer/tracer.service";
 import { loggerPort } from "@domain/@shared/port/logger.port";
-import { metricsPort } from "@app/@core/domain/@shared/port/metrics.port";
-import { tracerPort } from "@app/@core/domain/@shared/port/tracer.port";
+import { metricsPort } from "@domain/@shared/port/metrics.port";
+import { tracerPort } from "@domain/@shared/port/tracer.port";
 
 @Module({
     providers: [

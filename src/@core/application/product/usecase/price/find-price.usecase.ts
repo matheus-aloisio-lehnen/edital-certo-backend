@@ -1,7 +1,7 @@
-import { IFindPriceUsecase, IPriceRepository } from "@domain/product/port/price.port";
-import { Page, PageParamsInput } from "@domain/@shared/type/page.type";
-import { Price } from "@domain/product/entity/price.entity";
-import { PriceKey } from "@domain/product/constant/price-key.constant";
+import { IFindPriceUsecase, IPriceRepository } from "@product/port/price.port";
+import { Page, PageParams } from "@domain/@shared/type/page.type";
+import { Price } from "@product/entity/price.entity";
+import { PriceKey } from "@product/constant/price-key.constant";
 import { IMetrics } from "@domain/@shared/port/metrics.port";
 
 export class FindPriceUsecase implements IFindPriceUsecase {
@@ -9,9 +9,10 @@ export class FindPriceUsecase implements IFindPriceUsecase {
     constructor(
         private readonly priceRepository: IPriceRepository,
         private readonly metrics: IMetrics,
-    ) {}
+    ) {
+    }
 
-    async findAll(params: PageParamsInput): Promise<Page<Price>> {
+    async findAll(params: PageParams): Promise<Page<Price>> {
         const result = await this.priceRepository.findAll(params);
         this.metrics.increment('price.queried.all', { count: String(result.list.length) }); return result;
     }

@@ -1,12 +1,17 @@
-import { Feature } from "@domain/product/entity/feature.entity";
-import { FeatureKey } from "@domain/product/constant/feature-key.constant";
-import { Page, PageParamsInput } from "@domain/@shared/type/page.type";
-import { CreateFeatureProps } from "@domain/product/props/create-feature.props";
-import { QuotaRenewalCycle } from "@domain/product/constant/quota-renewal-cycle.constant";
+import { Feature } from "@product/entity/feature.entity";
+import { FeatureKey } from "@product/constant/feature-key.constant";
+import { Page, PageParams } from "@domain/@shared/type/page.type";
+import { CreateFeatureProps } from "@product/props/create-feature.props";
+import { QuotaRenewalCycle } from "@product/constant/quota-renewal-cycle.constant";
+
+export const featureRepositoryPort = Symbol('featureRepositoryPort');
+export const findFeatureUsecasePort = Symbol('findFeatureUsecasePort');
+export const createFeatureUsecasePort = Symbol('createFeatureUsecasePort');
+export const updateFeatureUsecasePort = Symbol('updateFeatureUsecasePort');
 
 export interface IFeatureRepository {
-    findAll(params: PageParamsInput): Promise<Page<Feature>>;
-    findAllByPlanId(planId: number, params: PageParamsInput): Promise<Page<Feature>>;
+    findAll(params: PageParams): Promise<Page<Feature>>;
+    findAllByPlanId(planId: number, params: PageParams): Promise<Page<Feature>>;
     findById(id: number): Promise<Feature | null>;
     findByPlanIdAndKey(planId: number, key: FeatureKey): Promise<Feature | null>;
     save(feature: Feature): Promise<Feature>;
@@ -14,7 +19,7 @@ export interface IFeatureRepository {
 }
 
 export interface IFindFeatureUsecase {
-    findAll(params: PageParamsInput): Promise<Page<Feature>>;
+    findAll(params: PageParams): Promise<Page<Feature>>;
     findById(id: number): Promise<Feature | null>;
     findByPlanIdAndKey(planId: number, key: FeatureKey): Promise<Feature | null>;
 }

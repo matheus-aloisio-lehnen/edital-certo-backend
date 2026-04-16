@@ -1,42 +1,36 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { describe, expect, it, vi, beforeEach, Mock } from 'vitest';
 import { CreatePriceUsecase } from '@application/product/usecase/price/create-price.usecase';
-import { IPriceRepository } from '@domain/product/port/price.port';
-import { IPlanRepository } from '@domain/product/port/plan.port';
-import { IProductGatewayService } from '@domain/product/port/product-payment-gateway.port';
-import { IProductValidatorService } from '@domain/product/port/product-validator.port';
-import { createTransactionManagerMock } from '@mock/tests.mock';
+import { IPriceRepository } from '@product/port/price.port';
+import { IPlanRepository } from '@product/port/plan.port';
+import { IProductGatewayService } from '@product/port/product-payment-gateway.port';
+import { IProductValidatorService } from '@product/port/product-validator.port';
+import {
+    createTransactionManagerMock,
+    createPlanRepositoryMock,
+    createPriceRepositoryMock,
+    createProductGatewayServiceMock,
+    createProductValidatorServiceMock,
+} from '@mock/tests.mock';
 import { MockPriceInput, MockPlan } from '@mock/in-memory.mock';
-import { PlanFactory } from '@domain/product/factory/plan.factory';
+import { PlanFactory } from '@product/factory/plan.factory';
 import { AppException } from '@domain/@shared/exception/app.exception';
-import { Price } from '@domain/product/entity/price.entity';
+import { Price } from '@product/entity/price.entity';
+import { ITransactionManager } from '@domain/@shared/port/transaction.port';
 
 describe('CreatePriceUsecase', () => {
     let usecase: CreatePriceUsecase;
     let priceRepository: IPriceRepository;
     let planRepository: IPlanRepository;
-    let transactionManager: any;
+    let transactionManager: ITransactionManager;
     let productGatewayService: IProductGatewayService;
     let productValidatorService: IProductValidatorService;
 
     beforeEach(() => {
-        priceRepository = {
-            findById: vi.fn(),
-            findByPlanIdAndKey: vi.fn(),
-            save: vi.fn((price) => Promise.resolve(price)),
-            saveBulk: vi.fn((prices) => Promise.resolve(prices)),
-        } as any;
-        planRepository = {
-            findById: vi.fn(),
-        } as any;
+        priceRepository = createPriceRepositoryMock();
+        planRepository = createPlanRepositoryMock();
         transactionManager = createTransactionManagerMock();
-        productGatewayService = {
-            syncPrice: vi.fn(),
-            syncDiscount: vi.fn(),
-        } as any;
-        productValidatorService = {
-            validatePriceKeys: vi.fn(),
-            validateDiscountKeys: vi.fn(),
-        } as any;
+        productGatewayService = createProductGatewayServiceMock();
+        productValidatorService = createProductValidatorServiceMock();
 
         usecase = new CreatePriceUsecase(
             priceRepository,
@@ -49,44 +43,52 @@ describe('CreatePriceUsecase', () => {
 
     const plan = PlanFactory.rehydrate({ ...MockPlan, externalPlanId: 'ext-123' });
 
-    describe('create', () => {
-        it('should create and sync a new price', async () => {
-            const input = { ...MockPriceInput, planId: 1 };
-            (planRepository.findById as any).mockResolvedValue(plan);
-            (priceRepository.findByPlanIdAndKey as any).mockResolvedValue(null);
-
-            const result = await usecase.create(input);
-
-            expect(result).toBeInstanceOf(Price);
-            expect(productGatewayService.syncPrice).toHaveBeenCalled();
-            expect(priceRepository.save).toHaveBeenCalled();
+    it('create should create and sync a new price', async () => {
+        const input = { ...MockPriceInput, planId: 1 };
+        (planRepository.findById as Mock).mockResolvedValue(plan);
+        (priceRepository.findByPlanIdAndKey as Mock).mockResolvedValue(null);
+        (priceRepository.save as Mock).mockImplementation((p) => {
+            Object.assign(p, { _id: 1 });
+            if (p.discount) Object.assign(p.discount, { _id: 1, _priceId: 1 });
+            return p;
         });
 
-        it('should throw if plan not found', async () => {
-            const input = { ...MockPriceInput, planId: 999 };
-            (planRepository.findById as any).mockResolvedValue(null);
-            await expect(usecase.create(input)).rejects.toThrow(AppException);
-        });
+        const result = await usecase.create(input);
 
-        it('should throw if plan has no externalPlanId', async () => {
-            const planData = { ...MockPlan, externalPlanId: undefined };
-            const planWithoutExt = PlanFactory.rehydrate(planData);
-            const input = { ...MockPriceInput, planId: 1 };
-            (planRepository.findById as any).mockResolvedValue(planWithoutExt);
-            await expect(usecase.create(input)).rejects.toThrow(AppException);
-        });
+        expect(result).toBeInstanceOf(Price);
+        expect(productGatewayService.syncPrice).toHaveBeenCalled();
+        expect(priceRepository.save).toHaveBeenCalled();
     });
 
-    describe('createBulk', () => {
-        it('should create multiple prices', async () => {
-            const inputList = [{ ...MockPriceInput, planId: 1 }];
-            (planRepository.findById as any).mockResolvedValue(plan);
-            (priceRepository.findByPlanIdAndKey as any).mockResolvedValue(null);
+    it('create should throw if plan not found', async () => {
+        const input = { ...MockPriceInput, planId: 999 };
+        (planRepository.findById as Mock).mockResolvedValue(null);
+        await expect(usecase.create(input)).rejects.toThrow(AppException);
+    });
 
-            const result = await usecase.createBulk(inputList);
+    it('create should throw if plan has no externalPlanId', async () => {
+        const planData = { ...MockPlan, externalPlanId: null };
+        const planWithoutExt = PlanFactory.rehydrate(planData);
+        const input = { ...MockPriceInput, planId: 1 };
+        (planRepository.findById as Mock).mockResolvedValue(planWithoutExt);
+        await expect(usecase.create(input)).rejects.toThrow(AppException);
+    });
 
-            expect(result).toHaveLength(1);
-            expect(priceRepository.saveBulk).toHaveBeenCalled();
+    it('createBulk should create multiple prices', async () => {
+        const inputList = [{ ...MockPriceInput, planId: 1 }];
+        (planRepository.findById as Mock).mockResolvedValue(plan);
+        (priceRepository.findByPlanIdAndKey as Mock).mockResolvedValue(null);
+        (priceRepository.saveBulk as Mock).mockImplementation((prices) => {
+            return prices.map((p: any, index: number) => {
+                Object.assign(p, { _id: index + 1 });
+                if (p.discount) Object.assign(p.discount, { _id: index + 1, _priceId: index + 1 });
+                return p;
+            });
         });
+
+        const result = await usecase.createBulk(inputList);
+
+        expect(result).toHaveLength(1);
+        expect(priceRepository.saveBulk).toHaveBeenCalled();
     });
 });

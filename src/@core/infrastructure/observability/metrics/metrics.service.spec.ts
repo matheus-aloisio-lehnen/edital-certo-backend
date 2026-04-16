@@ -18,7 +18,7 @@ describe('Metrics', () => {
         expect(service).toBeDefined();
     });
 
-    it('increments a counter metric', () => {
+    it('increment should increment a counter metric', () => {
         const counter = {
             add: vi.fn(),
         };
@@ -34,7 +34,7 @@ describe('Metrics', () => {
         });
     });
 
-    it('records a gauge metric', () => {
+    it('gauge should record a gauge metric', () => {
         const gauge = {
             record: vi.fn(),
         };
@@ -50,7 +50,7 @@ describe('Metrics', () => {
         });
     });
 
-    it('records a histogram metric', () => {
+    it('observe should record a histogram metric', () => {
         const histogram = {
             record: vi.fn(),
         };
@@ -66,7 +66,7 @@ describe('Metrics', () => {
         });
     });
 
-    it('reuses a counter instrument for the same name', () => {
+    it('increment should reuse a counter instrument for the same name', () => {
         const createCounterSpy = vi.spyOn((service as any).meter, 'createCounter');
 
         service.increment('quota_usage_total');
@@ -75,7 +75,7 @@ describe('Metrics', () => {
         expect(createCounterSpy).toHaveBeenCalledTimes(1);
     });
 
-    it('does not record metrics when observability is disabled', () => {
+    it('increment should not record metrics when observability is disabled', () => {
         MockConfigServe = createConfigServiceMock({
             observability: { logs: true, metric: false, trace: true },
         });

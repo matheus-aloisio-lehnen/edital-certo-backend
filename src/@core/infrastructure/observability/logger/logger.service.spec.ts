@@ -18,7 +18,7 @@ describe('Logger', () => {
         expect(service).toBeDefined();
     });
 
-    it('delegates to the level method with the provided context', () => {
+    it('write should delegate to the level method with the provided context', () => {
         const errorSpy = vi.spyOn(service, 'error').mockImplementation(() => undefined);
         const message = { msg: 'cache failure', key: 'quota' };
 
@@ -31,7 +31,7 @@ describe('Logger', () => {
         expect(errorSpy).toHaveBeenCalledWith(message, 'QuotaUsageService');
     });
 
-    it('delegates to the level method without context when one is not provided', () => {
+    it('write should delegate to the level method without context when one is not provided', () => {
         const warnSpy = vi.spyOn(service, 'warn').mockImplementation(() => undefined);
         const message = { msg: 'cache unavailable' };
 
@@ -43,7 +43,7 @@ describe('Logger', () => {
         expect(warnSpy).toHaveBeenCalledWith(message);
     });
 
-    it('exports the log record to OpenTelemetry', () => {
+    it('write should export the log record to OpenTelemetry', () => {
         const emitSpy = vi.spyOn((service as any).otelLogger, 'emit');
         const message = { msg: 'cache unavailable', key: 'quota' };
 
@@ -63,7 +63,7 @@ describe('Logger', () => {
         });
     });
 
-    it('does not export when observability are disabled', () => {
+    it('write should not export when observability are disabled', () => {
         MockConfigServe = createConfigServiceMock({
             observability: { logs: false, metric: true, trace: true },
         });

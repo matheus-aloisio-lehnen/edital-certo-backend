@@ -50,7 +50,7 @@ describe('RabbitmqService', () => {
         expect(service).toBeDefined();
     });
 
-    it('publishes the event to the queue with persistent message options', async () => {
+    it('publish should publish the event to the queue with persistent message options', async () => {
         await service.publish({
             name: 'password-reseted',
             payload: {
@@ -75,7 +75,7 @@ describe('RabbitmqService', () => {
         );
     });
 
-    it('reuses the same channel for multiple publishes', async () => {
+    it('publish should reuse the same channel for multiple publishes', async () => {
         await service.publish({
             name: 'event-a',
             payload: {},

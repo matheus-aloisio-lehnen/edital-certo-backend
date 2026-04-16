@@ -31,8 +31,10 @@
             "@application/*": ["src/@core/application/*"],
 
             "@domain/*": ["src/@core/domain/*"],
+            "@product/*": ["src/@core/domain/product/*"],
 
             // infrastructure
+            "@infrastructure/*": ["src/@core/infrastructure/*"],
             "@event/*": ["src/@core/infrastructure/event/*"],
             "@persistence/*": ["src/@core/infrastructure/persistence/*"],
             "@observability/*": ["src/@core/infrastructure/observability/*"],

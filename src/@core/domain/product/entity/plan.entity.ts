@@ -1,9 +1,9 @@
 import { AppException } from "@domain/@shared/exception/app.exception";
 import { code } from "@domain/@shared/constant/code.constant";
-import { PlanKey } from "@domain/product/constant/plan-key.constant";
-import { CreatePlanProps } from "@domain/product/props/create-plan.props";
-import { Feature } from "@domain/product/entity/feature.entity";
-import { Price } from "@domain/product/entity/price.entity";
+import { PlanKey } from "@product/constant/plan-key.constant";
+import { CreatePlanProps } from "@product/props/create-plan.props";
+import { Feature } from "@product/entity/feature.entity";
+import { Price } from "@product/entity/price.entity";
 import { hasValue } from "@domain/@shared/utils/helper.utils";
 
 export class Plan {

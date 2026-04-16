@@ -1,5 +1,5 @@
-import { Discount } from "@domain/product/entity/discount.entity";
-import { CreateDiscountProps } from "@domain/product/props/create-discount.props";
+import { Discount } from "@product/entity/discount.entity";
+import { CreateDiscountProps } from "@product/props/create-discount.props";
 import { DiscountModel } from "@persistence/database/postgres/typeorm/model/product/discount.model";
 
 export class DiscountFactory {

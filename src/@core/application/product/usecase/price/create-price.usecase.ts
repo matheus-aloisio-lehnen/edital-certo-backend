@@ -1,14 +1,14 @@
 import { AppException } from "@domain/@shared/exception/app.exception";
 import { code } from "@domain/@shared/constant/code.constant";
 import { ITransactionManager } from "@domain/@shared/port/transaction.port";
-import { Price } from "@domain/product/entity/price.entity";
-import { Plan } from "@domain/product/entity/plan.entity";
-import { PriceFactory } from "@domain/product/factory/price.factory";
-import { IPlanRepository } from "@domain/product/port/plan.port";
-import { ICreatePriceUsecase, IPriceRepository } from "@domain/product/port/price.port";
-import { IProductGatewayService } from "@domain/product/port/product-payment-gateway.port";
-import { IProductValidatorService } from "@domain/product/port/product-validator.port";
-import { CreatePriceProps } from "@domain/product/props/create-price.props";
+import { Price } from "@product/entity/price.entity";
+import { Plan } from "@product/entity/plan.entity";
+import { PriceFactory } from "@product/factory/price.factory";
+import { IPlanRepository } from "@product/port/plan.port";
+import { ICreatePriceUsecase, IPriceRepository } from "@product/port/price.port";
+import { IProductGatewayService } from "@product/port/product-payment-gateway.port";
+import { IProductValidatorService } from "@product/port/product-validator.port";
+import { CreatePriceProps } from "@product/props/create-price.props";
 
 export class CreatePriceUsecase implements ICreatePriceUsecase {
 
@@ -18,7 +18,8 @@ export class CreatePriceUsecase implements ICreatePriceUsecase {
         private readonly transactionManager: ITransactionManager,
         private readonly productGatewayService: IProductGatewayService,
         private readonly productValidatorService: IProductValidatorService,
-    ) {}
+    ) {
+    }
 
     async create(input: CreatePriceProps): Promise<Price> {
         const metadata = {

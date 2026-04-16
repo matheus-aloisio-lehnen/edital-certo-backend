@@ -1,7 +1,7 @@
 import { Money } from "@domain/@shared/value-object/money.value-object";
-import { Price } from "@domain/product/entity/price.entity";
-import { DiscountFactory } from "@domain/product/factory/discount.factory";
-import { CreatePriceProps } from "@domain/product/props/create-price.props";
+import { Price } from "@product/entity/price.entity";
+import { DiscountFactory } from "@product/factory/discount.factory";
+import { CreatePriceProps } from "@product/props/create-price.props";
 import { PriceModel } from "@persistence/database/postgres/typeorm/model/product/price.model";
 import { Currency } from "@domain/@shared/type/language.type";
 

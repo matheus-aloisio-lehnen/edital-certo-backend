@@ -1,163 +1,180 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, Mock } from "vitest";
 import { createProductGatewayClientMock } from "@mock/tests.mock";
-import { MockPlan } from "@mock/in-memory.mock";
-import { PlanFactory } from "@domain/product/factory/plan.factory";
+import { MockCreatePlans, MockPlan } from "@mock/in-memory.mock";
+import { PlanFactory } from "@product/factory/plan.factory";
 import { currency } from "@domain/@shared/type/language.type";
 import { ProductGatewayService } from "./product-gateway.service";
+import { IProductGatewayClient } from "@product/port/product-payment-gateway.port";
 
 describe("ProductGatewayService", () => {
     let service: ProductGatewayService;
-    let gatewayClient: any;
+    let gatewayClient: IProductGatewayClient;
 
     beforeEach(() => {
         gatewayClient = createProductGatewayClientMock();
         service = new ProductGatewayService(gatewayClient);
     });
 
-    describe("syncPlan", () => {
-        it("should sync a new plan and its prices", async () => {
-            const plan = PlanFactory.rehydrate(MockPlan);
-            
-            // Usando as propriedades privadas via rehydrate para simular estado novo
-            Object.assign(plan, { _externalPlanId: undefined });
-            plan.prices.forEach(price => {
-                 Object.assign(price, { _externalPriceId: undefined });
-                 if (price.discount) {
-                    Object.assign(price.discount, { _externalDiscountId: undefined });
-                 }
-            });
-
-            gatewayClient.createProduct.mockResolvedValue({ id: "ext_prod_new" });
-            gatewayClient.createPrice.mockResolvedValue({ id: "ext_price_new" });
-            gatewayClient.updatePrice.mockResolvedValue(undefined);
-            gatewayClient.createCoupon.mockResolvedValue({ id: "ext_coupon_new" });
-
-            await service.syncPlan(plan);
-
-            expect(gatewayClient.createProduct).toHaveBeenCalled();
-            expect(gatewayClient.createPrice).toHaveBeenCalled();
-            expect(gatewayClient.updatePrice).toHaveBeenCalled();
-            expect(gatewayClient.createCoupon).toHaveBeenCalled();
-            expect(plan.externalPlanId).toBe("ext_prod_new");
+    it("syncPlan should sync a new plan and its prices", async () => {
+        const plan = PlanFactory.create(MockCreatePlans[1]);
+        Object.assign(plan, { _id: 1 });
+        plan.prices.forEach(p => {
+            Object.assign(p, { _id: 1 });
+            p.linkExternalPriceId(null as any);
+            if (p.discount) {
+                Object.assign(p.discount, { _id: 1 });
+                p.discount.linkExternalDiscountId(null as any);
+            }
         });
+        const price = plan.prices.find(p => !!p.discount)!;
+        plan.linkExternalPlanId(null as any);
 
-        it("should update an existing plan and its prices", async () => {
-            const plan = PlanFactory.rehydrate(MockPlan);
-            
-            gatewayClient.updateProduct.mockResolvedValue(undefined);
-            gatewayClient.updatePrice.mockResolvedValue(undefined);
+        (gatewayClient.createProduct as Mock).mockResolvedValue({ id: "ext_prod_new" });
+        (gatewayClient.createPrice as Mock).mockResolvedValue({ id: "ext_price_new" });
+        (gatewayClient.updatePrice as Mock).mockResolvedValue(undefined);
+        (gatewayClient.createCoupon as Mock).mockResolvedValue({ id: "ext_coupon_new" });
 
-            await service.syncPlan(plan);
+        await service.syncPlan(plan);
 
-            expect(gatewayClient.updateProduct).toHaveBeenCalled();
-            expect(gatewayClient.updatePrice).toHaveBeenCalled();
-            expect(gatewayClient.createProduct).not.toHaveBeenCalled();
+        expect(gatewayClient.createProduct).toHaveBeenCalledTimes(1);
+        expect(gatewayClient.createPrice).toHaveBeenCalledTimes(plan.prices.length);
+        expect(gatewayClient.updatePrice).toHaveBeenCalledTimes(plan.prices.length);
+        expect(gatewayClient.createCoupon).toHaveBeenCalledTimes(1);
+        expect(plan.externalPlanId).toBe("ext_prod_new");
+        expect(price.externalPriceId).toBe("ext_price_new");
+        expect(price.discount?.externalDiscountId).toBe("ext_coupon_new");
+    });
+
+    it("syncPlan should update an existing plan and its prices", async () => {
+        const plan = PlanFactory.rehydrate(MockPlan);
+        plan.linkExternalPlanId("ext_prod_existing");
+
+        (gatewayClient.updateProduct as Mock).mockResolvedValue(undefined);
+        (gatewayClient.updatePrice as Mock).mockResolvedValue(undefined);
+
+        await service.syncPlan(plan);
+
+        expect(gatewayClient.updateProduct).toHaveBeenCalledTimes(1);
+        expect(gatewayClient.updateProduct).toHaveBeenCalledWith({
+            productId: "ext_prod_existing",
+            active: true,
+        });
+        expect(gatewayClient.updatePrice).toHaveBeenCalledTimes(1);
+        expect(gatewayClient.createProduct).not.toHaveBeenCalled();
+        expect(gatewayClient.createPrice).not.toHaveBeenCalled();
+    });
+
+    it("syncPrice should create price if externalPriceId is missing", async () => {
+        const plan = PlanFactory.rehydrate(MockPlan);
+        const price = plan.prices[0];
+        price.linkExternalPriceId(null as any);
+
+        (gatewayClient.createPrice as Mock).mockResolvedValue({ id: "new_price_id" });
+        (gatewayClient.updatePrice as Mock).mockResolvedValue(undefined);
+
+        await service.syncPrice(plan.id, plan.key, "ext_prod_123", price);
+
+        expect(gatewayClient.createPrice).toHaveBeenCalledTimes(1);
+        expect(gatewayClient.updatePrice).toHaveBeenCalledTimes(1);
+        expect(price.externalPriceId).toBe("new_price_id");
+    });
+
+    it("syncPrice should only update price if externalPriceId exists", async () => {
+        const plan = PlanFactory.rehydrate(MockPlan);
+        const price = plan.prices[0];
+
+        (gatewayClient.updatePrice as Mock).mockResolvedValue(undefined);
+
+        await service.syncPrice(plan.id, plan.key, "ext_prod_123", price);
+
+        expect(gatewayClient.createPrice).not.toHaveBeenCalled();
+        expect(gatewayClient.updatePrice).toHaveBeenCalledTimes(1);
+    });
+
+    it("syncDiscount should create coupon if externalDiscountId is missing", async () => {
+        const plan = PlanFactory.create(MockCreatePlans[1]);
+        const price = plan.prices.find(p => !!p.discount)!;
+        const discount = price.discount!;
+        Object.assign(discount, { _id: 1 });
+        discount.linkExternalDiscountId(null as any);
+
+        (gatewayClient.createCoupon as Mock).mockResolvedValue({ id: "new_coupon_id" });
+
+        await service.syncDiscount(currency.brl, discount);
+
+        expect(gatewayClient.createCoupon).toHaveBeenCalledTimes(1);
+        expect(discount.externalDiscountId).toBe("new_coupon_id");
+    });
+
+    it("syncDiscount should not create coupon if externalDiscountId already exists", async () => {
+        const plan = PlanFactory.create(MockCreatePlans[1]);
+        const price = plan.prices.find(p => !!p.discount)!;
+        const discount = price.discount!;
+        Object.assign(discount, { _id: 1 });
+        discount.linkExternalDiscountId("ext_coupon_existing");
+
+        (gatewayClient.createCoupon as Mock).mockResolvedValue({ id: "new_coupon_id" });
+
+        await service.syncDiscount(currency.brl, discount);
+
+        expect(gatewayClient.createCoupon).not.toHaveBeenCalled();
+    });
+
+    it("deactivatePlan should call updateProduct with active false", async () => {
+        const plan = PlanFactory.rehydrate(MockPlan);
+        plan.linkExternalPlanId("ext_prod_existing");
+        (gatewayClient.updateProduct as Mock).mockResolvedValue(undefined);
+
+        await service.deactivatePlan(plan);
+
+        expect(gatewayClient.updateProduct).toHaveBeenCalledWith({
+            productId: "ext_prod_existing",
+            active: false,
         });
     });
 
-    describe("syncPrice", () => {
-        it("should create price if externalPriceId is missing", async () => {
-            const plan = PlanFactory.rehydrate(MockPlan);
-            const price = plan.prices[0];
-            Object.assign(price, { _externalPriceId: undefined });
-            
-            gatewayClient.createPrice.mockResolvedValue({ id: "new_price_id" });
+    it("deactivatePlan should do nothing if plan has no externalPlanId", async () => {
+        const plan = PlanFactory.rehydrate({ ...MockPlan, externalPlanId: null });
 
-            await service.syncPrice(plan.id, plan.key, "ext_prod_123", price);
+        await service.deactivatePlan(plan);
 
-            expect(gatewayClient.createPrice).toHaveBeenCalled();
-            expect(price.externalPriceId).toBe("new_price_id");
-        });
+        expect(gatewayClient.updateProduct).not.toHaveBeenCalled();
+    });
 
-        it("should only update price if externalPriceId exists", async () => {
-            const plan = PlanFactory.rehydrate(MockPlan);
-            const price = plan.prices[0];
-            
-            await service.syncPrice(plan.id, plan.key, "ext_prod_123", price);
+    it("deactivatePrice should call updatePrice with active false", async () => {
+        const plan = PlanFactory.rehydrate(MockPlan);
+        const price = plan.prices[0];
+        (gatewayClient.updatePrice as Mock).mockResolvedValue(undefined);
 
-            expect(gatewayClient.createPrice).not.toHaveBeenCalled();
-            expect(gatewayClient.updatePrice).toHaveBeenCalled();
+        await service.deactivatePrice(price);
+
+        expect(gatewayClient.updatePrice).toHaveBeenCalledWith({
+            priceId: price.externalPriceId,
+            active: false,
         });
     });
 
-    describe("syncDiscount", () => {
-        it("should create coupon if externalDiscountId is missing", async () => {
-            const plan = PlanFactory.rehydrate(MockPlan);
-            const discount = plan.prices[0].discount!;
-            Object.assign(discount, { _externalDiscountId: undefined });
-            
-            gatewayClient.createCoupon.mockResolvedValue({ id: "new_coupon_id" });
+    it("deleteDiscount should call deleteCoupon", async () => {
+        const plan = PlanFactory.create(MockCreatePlans[1]);
+        const price = plan.prices.find(p => !!p.discount)!;
+        const discount = price.discount!;
+        discount.linkExternalDiscountId("ext_coupon_123");
 
-            await service.syncDiscount(currency.brl, discount);
+        (gatewayClient.deleteCoupon as Mock).mockResolvedValue(undefined);
 
-            expect(gatewayClient.createCoupon).toHaveBeenCalled();
-            expect(discount.externalDiscountId).toBe("new_coupon_id");
-        });
+        await service.deleteDiscount(discount);
 
-        it("should not create coupon if externalDiscountId already exists", async () => {
-            const plan = PlanFactory.rehydrate(MockPlan);
-            const discount = plan.prices[0].discount!;
-            
-            await service.syncDiscount(currency.brl, discount);
-
-            expect(gatewayClient.createCoupon).not.toHaveBeenCalled();
-        });
+        expect(gatewayClient.deleteCoupon).toHaveBeenCalledWith(discount.externalDiscountId);
     });
 
-    describe("deactivatePlan", () => {
-        it("should call updateProduct with active false", async () => {
-            const plan = PlanFactory.rehydrate(MockPlan);
-            
-            await service.deactivatePlan(plan);
+    it("deleteDiscount should do nothing if discount has no externalDiscountId", async () => {
+        const plan = PlanFactory.create(MockCreatePlans[1]);
+        const price = plan.prices.find(p => !!p.discount)!;
+        const discount = price.discount!;
+        discount.linkExternalDiscountId(null as any);
 
-            expect(gatewayClient.updateProduct).toHaveBeenCalledWith({
-                productId: plan.externalPlanId,
-                active: false
-            });
-        });
+        await service.deleteDiscount(discount);
 
-        it("should do nothing if plan has no externalPlanId", async () => {
-            const plan = PlanFactory.rehydrate(MockPlan);
-            Object.assign(plan, { _externalPlanId: undefined });
-            
-            await service.deactivatePlan(plan);
-
-            expect(gatewayClient.updateProduct).not.toHaveBeenCalled();
-        });
-    });
-
-    describe("deactivatePrice", () => {
-        it("should call updatePrice with active false", async () => {
-            const plan = PlanFactory.rehydrate(MockPlan);
-            const price = plan.prices[0];
-            
-            await service.deactivatePrice(price);
-
-            expect(gatewayClient.updatePrice).toHaveBeenCalledWith({
-                priceId: price.externalPriceId,
-                active: false
-            });
-        });
-    });
-
-    describe("deleteDiscount", () => {
-        it("should call deleteCoupon", async () => {
-            const plan = PlanFactory.rehydrate(MockPlan);
-            const discount = plan.prices[0].discount!;
-            
-            await service.deleteDiscount(discount);
-
-            expect(gatewayClient.deleteCoupon).toHaveBeenCalledWith(discount.externalDiscountId);
-        });
-
-        it("should do nothing if discount has no externalDiscountId", async () => {
-            const plan = PlanFactory.rehydrate(MockPlan);
-            const discount = plan.prices[0].discount!;
-            Object.assign(discount, { _externalDiscountId: undefined });
-            
-            await service.deleteDiscount(discount);
-
-            expect(gatewayClient.deleteCoupon).not.toHaveBeenCalled();
-        });
+        expect(gatewayClient.deleteCoupon).not.toHaveBeenCalled();
     });
 });

@@ -1,10 +1,12 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { describe, expect, it, vi, beforeEach, Mock } from 'vitest';
 import { FindDiscountUsecase } from './find-discount.usecase';
-import { IDiscountRepository } from '@domain/product/port/discount.port';
+import { IDiscountRepository } from '@product/port/discount.port';
 import { IMetrics } from '@domain/@shared/port/metrics.port';
-import { createMetricsMock } from '@mock/tests.mock';
+import { createMetricsMock, createDiscountRepositoryMock } from '@mock/tests.mock';
 import { MockDiscount } from '@mock/in-memory.mock';
-import { DiscountFactory } from '@domain/product/factory/discount.factory';
+import { DiscountFactory } from '@product/factory/discount.factory';
+
+import { PageParams, sortOrder } from '@domain/@shared/type/page.type';
 
 describe('FindDiscountUseCase', () => {
     let usecase: FindDiscountUsecase;
@@ -12,49 +14,39 @@ describe('FindDiscountUseCase', () => {
     let metrics: IMetrics;
 
     beforeEach(() => {
-        discountRepository = {
-            findAll: vi.fn(),
-            findAllByPriceId: vi.fn(),
-            findById: vi.fn(),
-        } as any;
+        discountRepository = createDiscountRepositoryMock();
         metrics = createMetricsMock();
         usecase = new FindDiscountUsecase(discountRepository, metrics);
     });
 
     const discount = DiscountFactory.rehydrate(MockDiscount);
 
-    describe('findAll', () => {
-        it('should return a page of discounts', async () => {
-            const page = { list: [discount], total: 1 };
-            (discountRepository.findAll as any).mockResolvedValue(page);
+    it('findAll should return a page of discounts', async () => {
+        const page = { list: [discount], count: 1, offset: 1, limit: 10 };
+        (discountRepository.findAll as Mock).mockResolvedValue(page);
 
-            const result = await usecase.findAll({ offset: 1, limit: 10 });
+        const result = await usecase.findAll({ offset: 1, limit: 10, orderBy: 'id', sortOrder: sortOrder.desc });
 
-            expect(result).toBe(page);
-            expect(metrics.increment).toHaveBeenCalledWith('discount.model.ts.queried.all', expect.any(Object));
-        });
+        expect(result).toBe(page);
+        expect(metrics.increment).toHaveBeenCalledWith('discount.model.ts.queried.all', expect.any(Object));
     });
 
-    describe('findAllByPriceId', () => {
-        it('should return a page of discounts for a priceId', async () => {
-            const page = { list: [discount], total: 1 };
-            (discountRepository.findAllByPriceId as any).mockResolvedValue(page);
+    it('findAllByPriceId should return a page of discounts for a priceId', async () => {
+        const page = { list: [discount], count: 1, offset: 1, limit: 10 };
+        (discountRepository.findAllByPriceId as Mock).mockResolvedValue(page);
 
-            const result = await usecase.findAllByPriceId(1, { offset: 1, limit: 10 });
+        const result = await usecase.findAllByPriceId(1, { offset: 1, limit: 10, orderBy: 'id', sortOrder: sortOrder.desc });
 
-            expect(result).toBe(page);
-            expect(metrics.increment).toHaveBeenCalledWith('discount.model.ts.queried.all-by-price-id', expect.any(Object));
-        });
+        expect(result).toBe(page);
+        expect(metrics.increment).toHaveBeenCalledWith('discount.model.ts.queried.all-by-price-id', expect.any(Object));
     });
 
-    describe('findById', () => {
-        it('should return a discount by id', async () => {
-            (discountRepository.findById as any).mockResolvedValue(discount);
+    it('findById should return a discount by id', async () => {
+        (discountRepository.findById as Mock).mockResolvedValue(discount);
 
-            const result = await usecase.findById(1);
+        const result = await usecase.findById(1);
 
-            expect(result).toBe(discount);
-            expect(metrics.increment).toHaveBeenCalledWith('discount.model.ts.queried.by-id', { found: 'true' });
-        });
+        expect(result).toBe(discount);
+        expect(metrics.increment).toHaveBeenCalledWith('discount.model.ts.queried.by-id', { found: 'true' });
     });
 });

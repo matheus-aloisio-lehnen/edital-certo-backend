@@ -1,4 +1,4 @@
-import { PriceKey } from "@domain/product/constant/price-key.constant";
+import { PriceKey } from "@product/constant/price-key.constant";
 
 export type CreateGatewayPriceDto = {
     currency: string;

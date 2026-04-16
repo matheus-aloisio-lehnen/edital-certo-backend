@@ -1,9 +1,9 @@
 import { AppException } from "@domain/@shared/exception/app.exception";
 import { code } from "@domain/@shared/constant/code.constant";
 import { ITransactionManager } from "@domain/@shared/port/transaction.port";
-import { QuotaRenewalCycle } from "@domain/product/constant/quota-renewal-cycle.constant";
-import { Feature } from "@domain/product/entity/feature.entity";
-import { IFeatureRepository, IUpdateFeatureUsecase } from "@domain/product/port/feature.port";
+import { QuotaRenewalCycle } from "@product/constant/quota-renewal-cycle.constant";
+import { Feature } from "@product/entity/feature.entity";
+import { IFeatureRepository, IUpdateFeatureUsecase } from "@product/port/feature.port";
 
 export class UpdateFeatureUsecase implements IUpdateFeatureUsecase {
 

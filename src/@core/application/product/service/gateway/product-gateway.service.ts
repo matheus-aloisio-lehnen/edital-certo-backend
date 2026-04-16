@@ -1,20 +1,23 @@
 import { Currency } from "@domain/@shared/type/language.type";
-import { Discount } from "@domain/product/entity/discount.entity";
-import { Plan } from "@domain/product/entity/plan.entity";
-import { Price } from "@domain/product/entity/price.entity";
-import { CreateGatewayCouponDto } from "@domain/product/dto/create-gateway-coupon.dto";
-import { CreateGatewayPriceDto } from "@domain/product/dto/create-gateway-price.dto";
-import { CreateGatewayProductDto } from "@domain/product/dto/create-gateway-product.dto";
-import { UpdateGatewayPriceDto } from "@domain/product/dto/update-gateway-price.dto";
-import { UpdateGatewayProductDto } from "@domain/product/dto/update-gateway-product.dto";
-import { IProductGatewayClient, IProductGatewayService } from "@domain/product/port/product-payment-gateway.port";
-import { discountDuration, discountType } from "@domain/product/constant/discount.constant";
+import { Discount } from "@product/entity/discount.entity";
+import { Plan } from "@product/entity/plan.entity";
+import { Price } from "@product/entity/price.entity";
+import { CreateGatewayCouponDto } from "@product/dto/create-gateway-coupon.dto";
+import { CreateGatewayPriceDto } from "@product/dto/create-gateway-price.dto";
+import { CreateGatewayProductDto } from "@product/dto/create-gateway-product.dto";
+import { UpdateGatewayPriceDto } from "@product/dto/update-gateway-price.dto";
+import { UpdateGatewayProductDto } from "@product/dto/update-gateway-product.dto";
+import { IProductGatewayClient, IProductGatewayService } from "@product/port/product-payment-gateway.port";
+import { discountDuration, discountType } from "@product/constant/discount.constant";
 import { toGatewayCurrency, toGatewayDiscountDuration, toGatewayRecurringInterval } from "@domain/@shared/utils/helper.utils";
-import { PlanKey } from "@domain/product/constant/plan-key.constant";
+import { PlanKey } from "@product/constant/plan-key.constant";
 
 export class ProductGatewayService implements IProductGatewayService {
 
-    constructor(private readonly gatewayClient: IProductGatewayClient) {}
+    constructor(
+        private readonly gatewayClient: IProductGatewayClient
+    ) {
+    }
 
     async syncPlan(plan: Plan): Promise<void> {
         const externalPlanId = await this.syncExternalPlan(plan);

@@ -7,6 +7,8 @@ import { MockPlan } from '@mock/in-memory.mock';
 import { PlanFactory } from '@domain/product/factory/plan.factory';
 import { planKey } from '@domain/product/constant/plan-key.constant';
 
+import { PageParams, sortOrder } from '@domain/@shared/type/page.type';
+
 describe('FindPlanUsecase', () => {
     let usecase: FindPlanUsecase;
     let planRepository: IPlanRepository;
@@ -30,7 +32,7 @@ describe('FindPlanUsecase', () => {
             const page = { list: [plan], total: 1 };
             (planRepository.findAll as any).mockResolvedValue(page);
 
-            const result = await usecase.findAll({ offset: 1, limit: 10 });
+            const result = await usecase.findAll({ offset: 1, limit: 10, orderBy: 'id', sortOrder: sortOrder.desc });
 
             expect(result).toBe(page);
             expect(metrics.increment).toHaveBeenCalledWith('plan.queried.all', expect.any(Object));

@@ -1,12 +1,12 @@
 import { AppException } from "@domain/@shared/exception/app.exception";
 import { code } from "@domain/@shared/constant/code.constant";
 import { ITransactionManager } from "@domain/@shared/port/transaction.port";
-import { Discount } from "@domain/product/entity/discount.entity";
-import { DiscountFactory } from "@domain/product/factory/discount.factory";
-import { ICreateDiscountUsecase, IDiscountRepository } from "@domain/product/port/discount.port";
-import { IProductGatewayService } from "@domain/product/port/product-payment-gateway.port";
-import { IPriceRepository } from "@domain/product/port/price.port";
-import { CreateDiscountProps } from "@domain/product/props/create-discount.props";
+import { Discount } from "@product/entity/discount.entity";
+import { DiscountFactory } from "@product/factory/discount.factory";
+import { ICreateDiscountUsecase, IDiscountRepository } from "@product/port/discount.port";
+import { IProductGatewayService } from "@product/port/product-payment-gateway.port";
+import { IPriceRepository } from "@product/port/price.port";
+import { CreateDiscountProps } from "@product/props/create-discount.props";
 
 export class CreateDiscountUsecase implements ICreateDiscountUsecase {
 
@@ -15,7 +15,8 @@ export class CreateDiscountUsecase implements ICreateDiscountUsecase {
         private readonly priceRepository: IPriceRepository,
         private readonly transactionManager: ITransactionManager,
         private readonly productGatewayService: IProductGatewayService,
-    ) {}
+    ) {
+    }
 
     async execute(input: CreateDiscountProps): Promise<Discount> {
         const metadata = {

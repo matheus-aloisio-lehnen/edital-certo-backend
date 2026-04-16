@@ -1,28 +1,27 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { IPriceRepository } from '@domain/product/port/price.port';
-import { IProductGatewayService } from '@domain/product/port/product-payment-gateway.port';
-import { createTransactionManagerMock } from '@mock/tests.mock';
+import { describe, expect, it, vi, beforeEach, Mock } from 'vitest';
+import { IPriceRepository } from '@product/port/price.port';
+import { IProductGatewayService } from '@product/port/product-payment-gateway.port';
+import {
+    createTransactionManagerMock,
+    createPriceRepositoryMock,
+    createProductGatewayServiceMock,
+} from '@mock/tests.mock';
 import { MockPrice } from '@mock/in-memory.mock';
-import { PriceFactory } from '@domain/product/factory/price.factory';
+import { PriceFactory } from '@product/factory/price.factory';
 import { AppException } from '@domain/@shared/exception/app.exception';
 import { UpdatePriceUsecase } from "@application/product/usecase/price/update-price.usecase";
+import { ITransactionManager } from '@domain/@shared/port/transaction.port';
 
 describe('UpdatePriceUsecase', () => {
     let usecase: UpdatePriceUsecase;
     let priceRepository: IPriceRepository;
-    let transactionManager: any;
+    let transactionManager: ITransactionManager;
     let productGatewayService: IProductGatewayService;
 
     beforeEach(() => {
-        priceRepository = {
-            findById: vi.fn(),
-            save: vi.fn((price) => Promise.resolve(price)),
-        } as any;
+        priceRepository = createPriceRepositoryMock();
         transactionManager = createTransactionManagerMock();
-        productGatewayService = {
-            deactivatePrice: vi.fn(),
-            deleteDiscount: vi.fn(),
-        } as any;
+        productGatewayService = createProductGatewayServiceMock();
 
         usecase = new UpdatePriceUsecase(
             priceRepository,
@@ -31,9 +30,9 @@ describe('UpdatePriceUsecase', () => {
         );
     });
 
-    it('should deactivate a price', async () => {
+    it('deactivate should deactivate a price', async () => {
         const price = PriceFactory.rehydrate({ ...MockPrice, externalPriceId: 'ext-p-123' });
-        (priceRepository.findById as any).mockResolvedValue(price);
+        (priceRepository.findById as Mock).mockResolvedValue(price);
 
         const result = await usecase.deactivate(1);
 
@@ -42,15 +41,15 @@ describe('UpdatePriceUsecase', () => {
         expect(priceRepository.save).toHaveBeenCalledWith(price);
     });
 
-    it('should throw if price not found', async () => {
-        (priceRepository.findById as any).mockResolvedValue(null);
+    it('deactivate should throw if price not found', async () => {
+        (priceRepository.findById as Mock).mockResolvedValue(null);
         await expect(usecase.deactivate(1)).rejects.toThrow(AppException);
     });
 
-    it('should throw if externalPriceId is missing', async () => {
-        const priceData = { ...MockPrice, externalPriceId: undefined };
+    it('deactivate should throw if externalPriceId is missing', async () => {
+        const priceData = { ...MockPrice, externalPriceId: null };
         const price = PriceFactory.rehydrate(priceData);
-        (priceRepository.findById as any).mockResolvedValue(price);
+        (priceRepository.findById as Mock).mockResolvedValue(price);
         await expect(usecase.deactivate(1)).rejects.toThrow(AppException);
     });
 });

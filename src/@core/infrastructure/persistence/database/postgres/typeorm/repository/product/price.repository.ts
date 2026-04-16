@@ -3,13 +3,13 @@ import { Repository } from "typeorm";
 import { Injectable } from "@nestjs/common";
 
 import { BaseRepository } from "@persistence/database/postgres/typeorm/repository/base/base.repository";
-import { Price } from "@domain/product/entity/price.entity";
+import { Price } from "@product/entity/price.entity";
 import { ClsService } from "nestjs-cls";
-import { Page, PageParamsInput } from "@domain/@shared/type/page.type";
-import { IPriceRepository } from "@domain/product/port/price.port";
-import { PriceKey } from "@domain/product/constant/price-key.constant";
-import { toQuery } from "@persistence/database/postgres/typeorm/page/to-query-options.page";
-import { PriceFactory } from "@domain/product/factory/price.factory";
+import { Page, PageParams } from "@domain/@shared/type/page.type";
+import { IPriceRepository } from "@product/port/price.port";
+import { PriceKey } from "@product/constant/price-key.constant";
+import { toQuery } from "@persistence/database/postgres/typeorm/page/to-query.page";
+import { PriceFactory } from "@product/factory/price.factory";
 import { PriceModel } from "@persistence/database/postgres/typeorm/model/product/price.model";
 
 @Injectable()
@@ -22,26 +22,26 @@ export class PriceRepository extends BaseRepository<PriceModel> implements IPric
         super(repo, cls);
     }
 
-    async findAll(params: PageParamsInput = {}): Promise<Page<Price>> {
-        const { where, order, skip: offset, take: limit } = toQuery<PriceModel>(params, ["id"]);
+    async findAll(params: PageParams): Promise<Page<Price>> {
+        const { where, order } = toQuery<PriceModel>(params, ["id"]);
 
         const [models, count] = await this.repository.findAndCount({
             where,
             order,
-            skip: offset,
-            take: limit,
+            skip: params.offset,
+            take: params.limit,
             relations: ["discounts"],
         });
 
         const list = PriceFactory.rehydrateBulk(models);
 
-        return { list, count, offset, limit };
+        return { list, count, offset: params.offset, limit: params.limit };
     }
 
     async findById(id: number): Promise<Price | null> {
         const model = await this.repository.findOne({
             where: { id },
-            relations: ["discounts"]
+            relations: ["discounts"],
         });
         return model ? PriceFactory.rehydrate(model) : null;
     }

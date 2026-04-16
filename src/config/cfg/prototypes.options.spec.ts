@@ -6,7 +6,7 @@ describe("registerPrototypes", () => {
         registerPrototypes();
     });
 
-    it("should extend array helpers", () => {
+    it("registerPrototypes should extend array helpers", () => {
         const list = [{ id: 1, name: "a" }, { id: 2, name: "b" }, { id: 2, name: "b2" }];
 
         expect(list.first()).toEqual({ id: 1, name: "a" });
@@ -33,7 +33,7 @@ describe("registerPrototypes", () => {
         expect([1, 2, 3].In()).toEqual({ op: "in", args: [1, 2, 3] });
     });
 
-    it("should extend string helpers", () => {
+    it("registerPrototypes should extend string helpers", () => {
         expect("   ".isBlank()).toBe(true);
         expect("  matheus".capitalize()).toBe("Matheus");
         expect("ação".stripAccents()).toBe("acao");
@@ -48,7 +48,7 @@ describe("registerPrototypes", () => {
         expect("  hello world ".ILike()).toEqual({ op: "ilike", args: "%hello world%" });
     });
 
-    it("should extend number and date helpers", () => {
+    it("registerPrototypes should extend number and date helpers", () => {
         const start = new Date("2026-01-01");
         const end = new Date("2026-01-31");
 
@@ -63,7 +63,7 @@ describe("registerPrototypes", () => {
         expect(start.Between(end)).toEqual({ op: "between", args: [start, end] });
     });
 
-    it("should extend object helpers", () => {
+    it("registerPrototypes should extend object helpers", () => {
         const obj = { id: 1, name: "Matheus", email: "m@test.com" };
 
         expect(Object.pick(obj, ["id", "name"])).toEqual({ id: 1, name: "Matheus" });

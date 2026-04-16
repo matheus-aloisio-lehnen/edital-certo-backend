@@ -1,6 +1,8 @@
-import { PlanKey } from "@domain/product/constant/plan-key.constant";
-import { PriceKey } from "@domain/product/constant/price-key.constant";
-import { FeatureKey } from "@domain/product/constant/feature-key.constant";
+import { PlanKey } from "@product/constant/plan-key.constant";
+import { PriceKey } from "@product/constant/price-key.constant";
+import { FeatureKey } from "@product/constant/feature-key.constant";
+
+export const productValidatorServicePort = Symbol('productValidatorServicePort');
 
 export interface IProductValidatorService {
     validatePlanKeys(keys: PlanKey[]): void
