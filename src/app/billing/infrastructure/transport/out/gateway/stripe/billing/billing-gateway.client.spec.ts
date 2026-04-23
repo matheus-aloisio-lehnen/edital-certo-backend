@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { StripeBillingGatewayClient } from "@billing/infrastructure/transport/out/payment-gateway/stripe/billing/billing-gateway.client";
+import { StripeBillingGatewayClient } from "@billing/infrastructure/transport/out/gateway/stripe/billing/billing-gateway.client";
 import Stripe from "stripe";
 import { HttpStatus } from "@nestjs/common";
 import { code } from "@shared/domain/constant/code.constant";

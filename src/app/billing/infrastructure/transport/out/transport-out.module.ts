@@ -2,7 +2,7 @@ import { Module } from "@nestjs/common";
 
 import { BillingGatewayService } from "@billing/application/gateway/service/billing-gateway.service";
 import { billingGatewayClientPort, billingGatewayServicePort } from "@billing/application/gateway/port/billing-gateway.port";
-import { StripeBillingGatewayClient } from "@billing/infrastructure/transport/out/payment-gateway/stripe/billing/billing-gateway.client";
+import { StripeBillingGatewayClient } from "@billing/infrastructure/transport/out/gateway/stripe/billing/billing-gateway.client";
 
 @Module({
     providers: [
