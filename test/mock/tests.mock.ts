@@ -1,68 +1,102 @@
-import { ConfigService } from '@nestjs/config';
-import { appConfig } from '@cfg/app.config';
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { TransactionManager } from "@persistence/database/postgres/typeorm/transaction/transaction.service";
-import { DataSource, ObjectLiteral, QueryRunner, Repository } from "typeorm";
-import { IPlanRepository } from "@domain/product/port/plan.port";
-import { IPriceRepository } from "@domain/product/port/price.port";
-import { IFeatureRepository } from "@domain/product/port/feature.port";
-import { IDiscountRepository } from "@domain/product/port/discount.port";
-import { IProductGatewayService } from "@domain/product/port/product-payment-gateway.port";
-import { IProductValidatorService } from "@domain/product/port/product-validator.port";
-import { BaseRepository } from "@persistence/database/postgres/typeorm/repository/base/base.repository";
+import { vi } from 'vitest';
+import { DataSource, ObjectLiteral, QueryRunner, Repository } from 'typeorm';
+import { ConfigService } from "@nestjs/config";
+
+import { type IBillingGatewayService } from "@billing/application/gateway/port/billing-gateway.port";
+import { type IDiscountRepository } from "@billing/domain/discount/port/discount.port";
+import { type IPlanRepository } from "@billing/domain/plan/port/plan.port";
+import { type IPriceRepository } from "@billing/domain/price/port/price.port";
+import { txKey } from "@shared/domain/port/transaction.port";
+import { appConfig, type AppConfig } from "@root/app.config";
+import { BaseRepository } from "@shared/infrastructure/persistence/database/postgres/typeorm/repository/base/base.repository";
 import { ClsService } from "nestjs-cls";
-import { txKey } from "@domain/@shared/port/transaction.port";
 
-type EmailConfigMock = {
-    apiKey: string;
-    apiSecret: string;
-    from: string;
+export const createConfigServiceMock = (override: Partial<AppConfig> = {},): ConfigService => {
+    const config: AppConfig = {
+        env: 'DEV',
+
+        nest: { port: 3000 },
+
+        urls: { v1SiteUrl: '', v1FrontendUrl: '' },
+
+        jwt: { secret: '' },
+
+        paymentGateway: {
+            secretKey: '',
+        },
+
+        swagger: {
+            enabled: true,
+            title: '',
+            description: '',
+            version: '',
+            path: '',
+        },
+
+        database: {
+            host: '',
+            port: 5432,
+            username: '',
+            password: '',
+            name: '',
+            sync: false,
+        },
+
+        redis: {
+            host: '',
+            port: 6379,
+            password: '',
+        },
+
+        rabbitmq: {
+            url: '',
+            user: '',
+            password: '',
+        },
+
+        email: {
+            host: '',
+            port: 2525,
+            secure: false,
+            user: '',
+            password: '',
+            apiKey: '',
+            apiSecret: '',
+            from: '',
+        },
+
+        gcp: {
+            credentials: '',
+            projectId: '',
+            geminiApiKey: '',
+        },
+
+        tawkTo: {
+            secret: '',
+        },
+
+        observability: {
+            logs: false,
+            metric: false,
+            trace: false,
+            endpoint: '',
+        },
+
+        ...override,
+    };
+
+    return {
+        get: (key: string) => {
+            if (key === "app" || key === appConfig.KEY)
+                return config;
+
+            return key
+                .replace(/^app\./, "")
+                .split(".")
+                .reduce((acc: any, k) => acc?.[k], config);
+        },
+    } as ConfigService;
 };
-
-type ObservabilityConfigMock = {
-    logs: boolean;
-    metric: boolean;
-    trace: boolean;
-};
-
-type RabbitmqConfigMock = {
-    url: string;
-    user?: string;
-    password?: string;
-};
-
-type ConfigServiceMockOptions = {
-    email?: EmailConfigMock;
-    observability?: ObservabilityConfigMock;
-    rabbitmq?: RabbitmqConfigMock;
-};
-
-export const createConfigServiceMock = (options: ConfigServiceMockOptions = {},): ConfigService => ({
-        get: vi.fn((key: string) => {
-            if (key !== appConfig.KEY)
-                return undefined;
-
-            return {
-                email: {
-                    apiKey: 'api-key',
-                    apiSecret: 'api-secret',
-                    from: 'noreply@editalcerto.com',
-                    ...options.email,
-                },
-                observability: {
-                    logs: true,
-                    metric: true,
-                    trace: true,
-                    ...options.observability,
-                },
-                rabbitmq: {
-                    url: 'amqp://rabbitmq',
-                    ...options.rabbitmq,
-                },
-            };
-        }),
-    } as unknown as ConfigService);
-
 export const createQueryRunnerMock = vi.fn();
 
 export const mockDataSource = {
@@ -111,7 +145,7 @@ export const createTransactionManagerMock = () => ({
     run: vi.fn((fn) => fn()),
 });
 
-export const createProductGatewayClientMock = () => ({
+export const createBillingGatewayClientMock = () => ({
     createProduct: vi.fn(),
     updateProduct: vi.fn(),
     createPrice: vi.fn(),
@@ -160,28 +194,15 @@ export const createBaseRepositoryMock = <T extends ObjectLiteral>(repo: Reposito
 
 export const createPlanRepositoryMock = (): IPlanRepository => ({
     findAll: vi.fn(),
-    findAllByKey: vi.fn(),
     findById: vi.fn(),
-    findByKey: vi.fn(),
     save: vi.fn(),
-    saveBulk: vi.fn(),
 });
 
 export const createPriceRepositoryMock = (): IPriceRepository => ({
     findAll: vi.fn(),
     findById: vi.fn(),
-    findByPlanIdAndKey: vi.fn(),
+    findByPlanIdAndBillingCycle: vi.fn(),
     save: vi.fn(),
-    saveBulk: vi.fn(),
-});
-
-export const createFeatureRepositoryMock = (): IFeatureRepository => ({
-    findAll: vi.fn(),
-    findAllByPlanId: vi.fn(),
-    findById: vi.fn(),
-    findByPlanIdAndKey: vi.fn(),
-    save: vi.fn(),
-    saveBulk: vi.fn(),
 });
 
 export const createDiscountRepositoryMock = (): IDiscountRepository => ({
@@ -192,18 +213,11 @@ export const createDiscountRepositoryMock = (): IDiscountRepository => ({
     delete: vi.fn(),
 });
 
-export const createProductGatewayServiceMock = (): IProductGatewayService => ({
+export const createBillingGatewayServiceMock = (): IBillingGatewayService => ({
     syncPlan: vi.fn(),
     syncPrice: vi.fn(),
     syncDiscount: vi.fn(),
     deactivatePlan: vi.fn(),
     deactivatePrice: vi.fn(),
     deleteDiscount: vi.fn(),
-});
-
-export const createProductValidatorServiceMock = (): IProductValidatorService => ({
-    validatePlanKeys: vi.fn(),
-    validatePriceKeys: vi.fn(),
-    validateDiscountKeys: vi.fn(),
-    validateFeaturesKeys: vi.fn(),
 });

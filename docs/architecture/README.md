@@ -26,7 +26,7 @@ Além disso:
 
 ### C1: Contexto
 
-Arquivo: [c1_context.puml](/home/matheus/dev/cuidatoria/edital-certo/backend/docs/architecture/c1_context.puml:1)
+Arquivo: [c1_context.puml](/home/matheus/Projetos/novo-projeto/backend/docs/architecture/c1_context.puml:1)
 
 Mostra:
 
@@ -42,7 +42,7 @@ Esse nível responde: "quem interage com o sistema e quais dependências externa
 
 ### C2: Containers
 
-Arquivo: [c2_container.puml](/home/matheus/dev/cuidatoria/edital-certo/backend/docs/architecture/c2_container.puml:1)
+Arquivo: [c2_container.puml](/home/matheus/Projetos/novo-projeto/backend/docs/architecture/c2_container.puml:1)
 
 Mostra os containers principais da solução:
 
@@ -61,7 +61,7 @@ Esse nível responde: "quais peças executáveis existem e como elas se comunica
 
 ### C3: Componentes
 
-Arquivo: [c3_component.puml](/home/matheus/dev/cuidatoria/edital-certo/backend/docs/architecture/c3_component.puml:1)
+Arquivo: [c3_component.puml](/home/matheus/Projetos/novo-projeto/backend/docs/architecture/c3_component.puml:1)
 
 Detalha principalmente:
 
@@ -74,7 +74,7 @@ Esse nível responde: "como a responsabilidade está dividida dentro dos contain
 
 ### C4: Código
 
-Arquivo: [c4_code.puml](/home/matheus/dev/cuidatoria/edital-certo/backend/docs/architecture/c4_code.puml:1)
+Arquivo: [c4_code.puml](/home/matheus/Projetos/novo-projeto/backend/docs/architecture/c4_code.puml:1)
 
 Representa o fluxo principal de ingestão e processamento assíncrono:
 

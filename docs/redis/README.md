@@ -23,7 +23,7 @@ Para garantir que dados de Marketing e Cotas de Uso nao sejam perdidos em restar
 ### 2.1 USAGE LIMITS (Cotas de IA)
 Controle em tempo real para travar execucoes excedentes.
 - **Contador (String)**
-    - **Chave:** `usage:{tenant_id}:{feature_key}`
+    - **Chave:** `usage:{tenant_id}:{resource_key}`
     - **Operacao:** `INCRBY` a cada execucao de IA.
     - **TTL:** Sem TTL (Resetado via API no inicio do ciclo de faturamento).
 

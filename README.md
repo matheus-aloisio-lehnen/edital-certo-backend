@@ -5,21 +5,21 @@ Este backend centraliza logs, métricas e traces em uma camada própria de obser
 ## Decisões Técnicas
 
 - Logs, métricas e traces são serviços separados:
-  - [Logger](/home/matheus/dev/cuidatoria/edital-certo/backend/src/@core/infrastructure/observability/logger/logger.service.ts:1)
-  - [Metrics](/home/matheus/dev/cuidatoria/edital-certo/backend/src/@core/infrastructure/observability/metrics/metrics.service.ts:1)
-  - [Tracer](/home/matheus/dev/cuidatoria/edital-certo/backend/src/@core/infrastructure/observability/tracer/tracer.service.ts:1)
-- O wiring fica no [ObservabilityModule](/home/matheus/dev/cuidatoria/edital-certo/backend/src/@core/infrastructure/observability/module/observability.module.ts:1), exportando os ports de observabilidade para o resto da aplicação.
+  - [Logger](/home/matheus/dev/cuidatoria/novo-projeto/backend/src/app/infrastructure/observability/logger/logger.service.ts:1)
+  - [Metrics](/home/matheus/dev/cuidatoria/novo-projeto/backend/src/app/infrastructure/observability/metrics/metrics.service.ts:1)
+  - [Tracer](/home/matheus/dev/cuidatoria/novo-projeto/backend/src/app/infrastructure/observability/tracer/tracer.service.ts:1)
+- O wiring fica no [ObservabilityModule](/home/matheus/dev/cuidatoria/novo-projeto/backend/src/app/infrastructure/observability/module/observability.module.ts:1), exportando os ports de observabilidade para o resto da aplicação.
 - Cada sinal pode ser ligado ou desligado por configuração:
   - `OBSERVABILITY_LOGS=true`
   - `OBSERVABILITY_METRIC=true`
   - `OBSERVABILITY_TRACE=true`
-- O Nest usa o `Logger` customizado como logger da aplicação quando `OBSERVABILITY_LOGS=true`, via [main.ts](/home/matheus/dev/cuidatoria/edital-certo/backend/src/main.ts:1).
+- O Nest usa o `Logger` customizado como logger da aplicação quando `OBSERVABILITY_LOGS=true`, via [main.ts](/home/matheus/dev/cuidatoria/novo-projeto/backend/src/main.ts:1).
 
 ## Como Funciona
 
 ### 1. Logs
 
-O [Logger](/home/matheus/dev/cuidatoria/edital-certo/backend/src/@core/infrastructure/observability/logger/logger.service.ts:1):
+O [Logger](/home/matheus/dev/cuidatoria/novo-projeto/backend/src/app/infrastructure/observability/logger/logger.service.ts:1):
 
 - estende `ConsoleLogger` do Nest
 - mantém saída JSON no console
@@ -36,7 +36,7 @@ Fluxo:
 
 ### 2. Métricas
 
-O [Metrics](/home/matheus/dev/cuidatoria/edital-certo/backend/src/@core/infrastructure/observability/metrics/metrics.service.ts:1):
+O [Metrics](/home/matheus/dev/cuidatoria/novo-projeto/backend/src/app/infrastructure/observability/metrics/metrics.service.ts:1):
 
 - usa `MeterProvider`
 - exporta com `OTLPMetricExporter`
@@ -55,7 +55,7 @@ Fluxo:
 
 ### 3. Traces
 
-O [Tracer](/home/matheus/dev/cuidatoria/edital-certo/backend/src/@core/infrastructure/observability/tracer/tracer.service.ts:1):
+O [Tracer](/home/matheus/dev/cuidatoria/novo-projeto/backend/src/app/infrastructure/observability/tracer/tracer.service.ts:1):
 
 - usa `NodeTracerProvider`
 - exporta spans com `OTLPTraceExporter`
@@ -157,7 +157,7 @@ Isso evita que o backend conheça diretamente Loki, Prometheus ou Tempo.
 
 ## Configuração
 
-As flags de observabilidade vêm de [app.config.ts](/home/matheus/dev/cuidatoria/edital-certo/backend/src/config/cfg/app.config.ts:1):
+As flags de observabilidade vêm de [app.config.ts](/home/matheus/dev/cuidatoria/novo-projeto/backend/src/config/cfg/app.config.ts:1):
 
 ```env
 OBSERVABILITY_LOGS=true
@@ -177,9 +177,9 @@ Se uma flag estiver desligada, o sinal correspondente não é exportado.
 
 Hoje a observabilidade já aparece em pontos como:
 
-- [EventBusService](/home/matheus/dev/cuidatoria/edital-certo/backend/src/@core/infrastructure/event/bus/event-bus.service.ts:1)
-- [AllExceptionsFilter](/home/matheus/dev/cuidatoria/edital-certo/backend/src/@core/infrastructure/transport/http/filters/all-exceptions.filter.ts:1)
-- [Email service](/home/matheus/dev/cuidatoria/edital-certo/backend/src/@core/infrastructure/transport/email/email.service.ts:1)
+- [EventBusService](/home/matheus/dev/cuidatoria/novo-projeto/backend/src/app/infrastructure/event/bus/event-bus.service.ts:1)
+- [AllExceptionsFilter](/home/matheus/dev/cuidatoria/novo-projeto/backend/src/app/infrastructure/transport/http/filters/all-exceptions.filter.ts:1)
+- [Email service](/home/matheus/dev/cuidatoria/novo-projeto/backend/src/app/infrastructure/transport/email/email.service.ts:1)
 
 Esses pontos são bons candidatos para:
 

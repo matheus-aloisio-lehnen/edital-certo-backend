@@ -1,5 +1,5 @@
-import { AppController } from "@app/app.controller";
-import { AppService } from "@app/app.service";
+import { AppController } from "./app.controller";
+import { AppService } from "./app.service";
 
 describe("AppController", () => {
     let appController: AppController;

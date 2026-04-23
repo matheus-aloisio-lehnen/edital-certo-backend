@@ -23,28 +23,14 @@
         "noFallthroughCasesInSwitch": false,
         "types": ["vitest/globals"],
         "paths": {
-            "@app/*": [
-                "src/*"
-            ],
+            "@app/*": ["src/app/*"],
+            "@root/*": ["src/*"],
+            "@auth/*": ["src/app/auth/*"],
 
-            // application
-            "@application/*": ["src/@core/application/*"],
+            "@shared/*": ["src/app/@shared/*"],
 
-            "@domain/*": ["src/@core/domain/*"],
-            "@product/*": ["src/@core/domain/product/*"],
-
-            // infrastructure
-            "@infrastructure/*": ["src/@core/infrastructure/*"],
-            "@event/*": ["src/@core/infrastructure/event/*"],
-            "@persistence/*": ["src/@core/infrastructure/persistence/*"],
-            "@observability/*": ["src/@core/infrastructure/observability/*"],
-            "@transport/*": ["src/@core/infrastructure/transport/*"],
-            "@utils/*": ["src/@core/infrastructure/utils/*"],
-
-            // config
-            "@cfg/*": ["src/config/cfg/*"],
+            "@billing/*": ["src/app/billing/*"],
             "@env/*": ["src/config/env/*"],
-
             "@mock/*": ["test/mock/*"]
         },
     }

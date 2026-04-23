@@ -2,10 +2,11 @@ import { NestFactory } from "@nestjs/core";
 import { ConfigService } from "@nestjs/config";
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
-import { AppModule } from "@app/app.module";
-import { AppConfig, appConfig } from "@cfg/app.config";
-import { Logger } from "@observability/logger/logger.service";
-import { registerPrototypes } from "@cfg/prototypes.options";
+import { AppConfig } from "@root/app.config";
+import { loggerPort } from "@shared/domain/port/logger.port";
+import { registerPrototypes } from "@shared/infrastructure/prototype/prototypes.register";
+
+import { AppModule } from "./app.module";
 
 async function bootstrap() {
     registerPrototypes();
@@ -17,10 +18,10 @@ async function bootstrap() {
 
     const cfg = app
         .get(ConfigService)
-        .get<AppConfig>(appConfig.KEY);
+        .get<AppConfig>('app');
 
     if (cfg?.observability.logs)
-        app.useLogger(app.get(Logger));
+        app.useLogger(app.get(loggerPort));
 
     if (cfg?.swagger.enabled) {
         const options = new DocumentBuilder()

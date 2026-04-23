@@ -98,7 +98,7 @@ scrape_configs:
   static_configs:
     - targets: [localhost]
       labels:
-      app: "edital-certo-api"
+      app: "novo-projeto-api"
       __path__: /var/log/app/logs.json
       pipeline_stages:
     - json:
