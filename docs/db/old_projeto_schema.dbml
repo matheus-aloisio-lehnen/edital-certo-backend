@@ -1,0 +1,692 @@
+// Platform
+
+Table featureFlag {
+  id integer [pk, increment]
+  key varchar(100) [unique, not null]
+  isActive bool [default: false, not null]
+  created_at timestamptz [default: `now()`]
+  updated_at timestamptz [default: `now()`]
+}
+
+Table featureFlagOverride {
+  id integer [pk, increment]
+  featureFlagId integer [ref: > featureFlag.id, not null]
+  tenantId integer [not null]
+  isActive bool [not null]
+  created_at timestamptz [default: `now()`]
+  updated_at timestamptz [default: `now()`]
+
+  indexes {
+    (featureFlagId)
+    (tenantId)
+    (featureFlagId, tenantId) [unique]
+  }
+}
+
+Table changelog {
+  id integer [pk, increment]
+  version varchar(20) [not null]
+  title varchar(255) [not null]
+  html text [not null]
+  isPublished boolean [not null, default: false]
+  publishedAt timestamptz
+
+  createdAt timestamptz [default: `now()`]
+  updatedAt timestamptz [default: `now()`]
+  deletedAt timestamptz
+
+  indexes {
+    version [unique]
+    isPublished
+    publishedAt
+  }
+
+  Note: 'Registro de atualizações e novas funcionalidades do sistema'
+}
+
+Table alert {
+  id integer [pk, increment]
+  type varchar(10) [not null]
+  severity varchar(15) [not null]
+  priority integer [not null]
+  content text [not null]
+  isActive boolean [not null, default: false]
+  expiresAt timestamptz
+
+  createdAt timestamptz [default: `now()`]
+  updatedAt timestamptz [default: `now()`]
+  deletedAt timestamptz
+
+  indexes {
+    isActive
+    expiresAt
+    (isActive, expiresAt)
+  }
+
+  Note: 'Centraliza as comunicações do time com os usuários'
+}
+
+Table alertAck {
+  id integer [pk, increment]
+  userId integer [not null, ref: > user.id]
+  alertId integer [not null, ref: > alert.id]
+  readAt timestamptz [not null, default: `now()`]
+
+  createdAt timestamptz [default: `now()`]
+  updatedAt timestamptz
+
+  indexes {
+    (userId, alertId) [unique]
+  }
+
+  Note: 'Rastreio de leitura individual'
+}
+
+// IDENTITY
+
+Table tenant {
+  id integer [pk, increment]
+  name varchar(200) [not null]
+
+  phone varchar(40)
+  document varchar(50) [unique]
+
+  addressId integer [null, ref: > tenantAddress.id]
+
+  createdAt timestamptz [default: `now()`]
+  updatedAt timestamptz
+  deletedAt timestamptz
+
+  indexes {
+    createdAt
+    deletedAt
+  }
+
+  Note: 'Conta principal do sistema. No caso do síndico profissional, representa a conta master que agrupa users e properties.'
+}
+
+Table tenantAddress {
+  id integer [pk, increment]
+
+  street varchar(200)
+  number varchar(20)
+  complement varchar(100)
+  city varchar(100)
+  state varchar(50)
+  postalCode varchar(20)
+  countryCode varchar(2) [default: 'BR']
+
+  createdAt timestamptz [default: `now()`]
+  updatedAt timestamptz
+  deletedAt timestamptz
+
+  Note: 'Endereço do tenant. Separado de propertyAddress porque identity e property são contextos/bancos diferentes.'
+}
+
+Table user {
+  id integer [pk, increment]
+  tenantId integer [not null, ref: > tenant.id]
+
+  name varchar(200) [not null]
+  email varchar(150) [not null, unique]
+  password varchar(100) [not null]
+  role varchar(30) [not null, default: 'assistant', note: 'master, assistant, resident']
+
+  langCode varchar(10) [not null, default: 'pt', note: 'pt, en, es']
+
+  createdAt timestamptz [default: `now()`]
+  updatedAt timestamptz [default: `now()`]
+  deletedAt timestamptz
+
+  indexes {
+    tenantId
+    email [unique]
+    role
+    deletedAt
+  }
+
+  Note: 'Todos os usuários pertencem a um tenant. O master é criado inicialmente e enxerga todas as properties do tenant por regra de negócio.'
+}
+
+Table session {
+  id uuid [pk]
+  userId integer [ref: > user.id, not null]
+  tenantId integer [ref: > tenant.id, not null]
+  refreshToken varchar(150) [not null, unique]
+  status varchar(20)
+  ip varchar(45)
+  userAgent text
+  device varchar(150)
+  expiresAt timestamptz [not null]
+  createdAt timestamptz [default: `now()`]
+  updatedAt timestamptz [default: `now()`]
+  deletedAt timestamptz
+
+  indexes {
+    userId
+    tenantId
+    refreshToken [unique]
+    expiresAt
+    (userId, status)
+    deletedAt
+  }
+
+  Note: 'Gerenciamento de sessões com suporte a Single Session e Refresh Token Rotation.'
+}
+
+
+// PROPERTY MANAGEMENT
+
+Table propertyAddress {
+  id integer [pk, increment]
+
+  street varchar(200)
+  number varchar(20)
+  complement varchar(100)
+  city varchar(100)
+  state varchar(50)
+  postalCode varchar(20)
+  countryCode varchar(2) [default: 'BR']
+
+  createdAt timestamptz [default: `now()`]
+  updatedAt timestamptz
+  deletedAt timestamptz
+
+  Note: 'Endereço da property. Separado de tenantAddress porque property pertence a outro contexto/banco.'
+}
+
+Table property {
+  id integer [pk, increment]
+
+  tenantId integer [not null, note: 'ID externo do tenant vindo do módulo/banco de identity. Sem FK cross-db.']
+
+  name varchar(200) [not null]
+  type varchar(30) [not null, default: 'condominium', note: 'condominium, house, apartment, building']
+
+  document varchar(50)
+  phone varchar(40)
+  email varchar(150)
+
+  addressId integer [null, ref: > propertyAddress.id]
+  avatarFileId integer [null, ref: > file.id]
+
+  createdAt timestamptz [default: `now()`]
+  updatedAt timestamptz
+  deletedAt timestamptz
+
+  indexes {
+    tenantId
+    type
+    createdAt
+    deletedAt
+  }
+
+  Note: 'Unidade física gerenciada pelo tenant, como condomínio, casa, apartamento ou imóvel.'
+}
+
+Table propertyUser {
+  id integer [pk, increment]
+
+  propertyId integer [not null, ref: > property.id]
+  userId integer [not null, note: 'ID externo do user vindo do módulo/banco de identity. Sem FK cross-db.']
+
+  createdAt timestamptz [default: `now()`]
+  updatedAt timestamptz
+  deletedAt timestamptz
+
+  indexes {
+    userId
+    propertyId
+    (userId, propertyId) [unique]
+    deletedAt
+  }
+
+  Note: 'Define quais properties um user pode acessar. O user master pode enxergar tudo por regra de negócio sem precisar necessariamente estar aqui.'
+}
+
+Table file {
+  id integer [pk, increment]
+
+  tenantId integer [not null, note: 'ID externo do tenant vindo de identity. Ajuda em isolamento lógico e storage.']
+
+  storageKey varchar(255) [not null, unique]
+  fileName varchar(255) [not null]
+  mimeType varchar(100)
+  extension varchar(20)
+  size integer
+  type varchar(30) [not null, note: 'image, document, avatar, audio, video, other']
+
+  uploadedByUserId integer [null, note: 'ID externo do user vindo de identity']
+
+  createdAt timestamptz [default: `now()`]
+  updatedAt timestamptz
+  deletedAt timestamptz
+
+  indexes {
+    tenantId
+    storageKey [unique]
+    type
+    deletedAt
+  }
+
+  Note: 'Arquivo físico central do domínio. Os vínculos com property, task e request ficam em tabelas próprias.'
+}
+
+Table propertyFile {
+  id integer [pk, increment]
+
+  propertyId integer [not null, ref: > property.id]
+  fileId integer [not null, ref: > file.id]
+
+  createdAt timestamptz [default: `now()`]
+
+  indexes {
+    propertyId
+    fileId
+    (propertyId, fileId) [unique]
+  }
+
+  Note: 'Arquivos ligados diretamente à property, além do avatar se precisar no futuro.'
+}
+
+Table location {
+  id integer [pk, increment]
+
+  propertyId integer [null, ref: > property.id]
+
+  name varchar(200) [not null]
+  description text
+
+  createdAt timestamptz [default: `now()`]
+  updatedAt timestamptz
+  deletedAt timestamptz
+
+  indexes {
+    propertyId
+    sourceId
+    (propertyId, sourceId) [unique]
+    deletedAt
+  }
+
+  Note: 'Quando propertyId é null, é uma sugestão/default do sistema. Quando propertyId tem valor, é um location real da property. sourceId aponta para o default de origem quando foi criado a partir de sugestão.'
+}
+
+Table asset {
+  id integer [pk, increment]
+
+  propertyId integer [null, ref: > property.id]
+  locationId integer [null, ref: > location.id]
+
+  name varchar(200) [not null]
+  description text
+
+  createdAt timestamptz [default: `now()`]
+  updatedAt timestamptz
+  deletedAt timestamptz
+
+  indexes {
+    propertyId
+    sourceId
+    locationId
+    (propertyId, sourceId) [unique]
+    deletedAt
+  }
+
+  Note: 'Quando propertyId é null, é uma sugestão/default do sistema. Quando propertyId tem valor, é um asset real da property. sourceId aponta para o default de origem quando foi criado a partir de sugestão.'
+}
+
+Table taskBlueprint {
+  id integer [pk, increment]
+
+  name varchar(200) [not null]
+  description text
+  type varchar(30) [not null, note: 'maintenance, routine']
+
+  defaultAssetId integer [null, ref: > asset.id] // property id precisa ser null
+
+  createdAt timestamptz [default: `now()`]
+  updatedAt timestamptz
+  deletedAt timestamptz
+
+  indexes {
+    type
+    defaultAssetId
+    deletedAt
+  }
+
+  Note: 'Sugestão padrão do sistema para criação de templates. Pode sugerir um asset global (propertyId null), mas não define location.'
+}
+
+Table taskTemplate {
+  id integer [pk, increment]
+
+  propertyId integer [not null, ref: > property.id]
+
+  assetId integer [null, ref: > asset.id]
+  locationId integer [null, ref: > location.id]
+
+  title varchar(200) [not null]
+  description text
+
+  type varchar(30) [not null, note: 'avulsa ou sei la um nome em ingles', 'maintenance, routine']
+
+  frequency varchar(30) [not null, note: 'none' 'daily, weekly, monthly, yearly']
+  weekDays varchar(30) [null, note: 'Ex: 1,3,5']
+  monthDays integer [null]
+  yearMonths integer [null]
+
+  startsAt timestamptz [not null]
+  endsAt timestamptz [null]
+
+  responsibleName varchar(200) [null]
+  notes text [null]
+
+  createdByUserId integer [not null, note: 'ID externo do user vindo de identity']
+  updatedByUserId integer [null, note: 'ID externo do user vindo de identity']
+
+  createdAt timestamptz [default: `now()`]
+  updatedAt timestamptz
+  deletedAt timestamptz
+
+  indexes {
+    propertyId
+    sourceId
+    assetId
+    locationId
+    type
+    recurrenceFrequency
+    startsAt
+    deletedAt
+  }
+
+  Note: 'Espelho configurado da property. É daqui que a cron gera as tasks.'
+}
+
+Table task {
+  id integer [pk, increment]
+
+  propertyId integer [not null, ref: > property.id]
+  templateId integer [null, ref: > taskTemplate.id]
+  requestId integer [null, ref: > request.id]
+
+  assetId integer [null, ref: > asset.id]
+  locationId integer [null, ref: > location.id]
+
+  title varchar(200) [not null]
+  description text
+
+  type varchar(30) [not null, note: 'maintenance, routine, one_off']
+
+  scheduledAt timestamptz [not null]
+  dueAt timestamptz [null]
+
+  status varchar(30) [not null, default: 'pending', note: 'pending, in_progress, completed, cancelled']
+
+  responsibleName varchar(200) [null, note: 'Responsável sugerido ou definido na task']
+  executedByName varchar(200) [null, note: 'Quem executou de fato']
+  completedByUserId integer [null, note: 'ID externo do user vindo de identity']
+
+  completedAt timestamptz [null]
+  notes text [null]
+
+  createdAt timestamptz [default: `now()`]
+  updatedAt timestamptz
+  deletedAt timestamptz
+
+  indexes {
+    propertyId
+    templateId
+    requestId
+    assetId
+    locationId
+    type
+    status
+    scheduledAt
+    dueAt
+    deletedAt
+  }
+
+  Note: 'Tarefa operacional real. Pode ser gerada pela cron a partir de um template ou criada manualmente como avulsa. Quando nasce de uma solicitação, mantém vínculo com request.'
+}
+
+Table taskFile {
+  id integer [pk, increment]
+
+  taskId integer [not null, ref: > task.id]
+  fileId integer [not null, ref: > file.id]
+
+  createdAt timestamptz [default: `now()`]
+
+  indexes {
+    taskId
+    fileId
+    (taskId, fileId) [unique]
+  }
+
+  Note: 'Arquivos anexados diretamente à task como evidência da execução (ex: recibos, notas, fotos, laudos). Diferente de requestMessageFile, não representa conversa, e sim comprovação ou documentação da tarefa.'
+}
+
+Table request {
+  id integer [pk, increment]
+
+  propertyId integer [not null, ref: > property.id]
+  createdByUserId integer [null, note: 'ID externo do user vindo de identity. Pode ser null se vier de integração externa sem usuário logado.']
+
+  assetId integer [null, ref: > asset.id]
+  locationId integer [null, ref: > location.id]
+  taskId integer [null, ref: > task.id]
+
+  title varchar(200) [not null]
+  status varchar(30) [not null, default: 'pending', note: 'pending, in_progress, completed, cancelled']
+  channel varchar(30) [not null, default: 'app', note: 'app, whatsapp, email, api, other']
+
+  createdAt timestamptz [default: `now()`]
+  updatedAt timestamptz
+  deletedAt timestamptz
+
+  indexes {
+    propertyId
+    createdByUserId
+    assetId
+    locationId
+    taskId
+    status
+    channel
+    createdAt
+    deletedAt
+  }
+
+  Note: 'Canal pai da solicitação. Representa o card/contexto da conversa. As mensagens ficam em requestMessage. Pode ou não gerar uma task.'
+}
+
+Table requestMessage {
+  id integer [pk, increment]
+
+  requestId integer [not null, ref: > request.id]
+
+  senderUserId integer [null, note: 'ID externo do user vindo de identity. Pode ser null se veio de integração externa.']
+  senderName varchar(200) [null, note: 'Nome exibido do remetente quando não houver user interno']
+  senderType varchar(30) [not null, note: 'manager, resident, external, system']
+
+  content text
+  type varchar(20) [not null, default: 'text', note: 'text, image, file, audio, system']
+  direction varchar(20) [not null, note: 'inbound, outbound']
+  source varchar(20) [not null, note: 'app, whatsapp, email, api, other']
+
+  externalMessageId varchar(150) [null]
+
+  createdAt timestamptz [default: `now()`]
+  updatedAt timestamptz
+  deletedAt timestamptz
+
+  indexes {
+    requestId
+    senderUserId
+    direction
+    source
+    externalMessageId
+    createdAt
+    deletedAt
+  }
+
+  Note: 'Mensagens trocadas dentro do request. Toda comunicação externa ou interna é normalizada e salva aqui.'
+}
+
+Table requestMessageFile {
+  id integer [pk, increment]
+
+  requestMessageId integer [not null, ref: > requestMessage.id]
+  fileId integer [not null, ref: > file.id]
+
+  createdAt timestamptz [default: `now()`]
+
+  indexes {
+    requestMessageId
+    fileId
+    (requestMessageId, fileId) [unique]
+  }
+
+  Note: 'Arquivos anexados a uma mensagem do request.'
+}
+
+// BILLING
+
+Table product {
+  id integer [pk, increment]
+
+  name varchar(120) [not null]
+
+  billingCycle varchar(30) [not null, default: 'MONTHLY', note: 'MONTHLY, YEARLY']
+  price integer [not null, note: 'Valor mensal por condomínio em centavos, sempre em BRL']
+  isActive boolean [not null, default: true]
+
+  externalProductId varchar(100)
+
+  createdAt timestamptz [default: `now()`]
+  updatedAt timestamptz
+  deletedAt timestamptz
+
+  Note: 'Produto comercial base do tenant. Mantém o ciclo padrão e o valor unitário em BRL por condomínio/property.'
+}
+
+Table price {
+  id integer [pk, increment]
+  productId integer [ref: > product.id]
+
+  billingCycle varchar(30) [not null, default: 'MONTHLY', note: 'MONTHLY, YEARLY']
+  value integer [note: 'Valor base em centavos']
+  isActive bool [default: true, note: 'Apenas um registro ativo por billingCycle']
+  externalPriceId varchar(100)
+  created_at timestamptz [default: `now()`]
+  updated_at timestamptz
+
+  indexes {
+    (productId)
+    (billingCycle)
+  }
+}
+
+Table discount {
+  id integer [pk, increment]
+  priceId integer [not null, ref: > price.id]
+  type varchar(20) [not null, note: 'PERCENT, FIXED']
+  value integer [not null, note: 'Percentual inteiro ou valor fixo em centavos']
+  duration varchar(20) [not null, note: 'ONCE, REPEATING, FOREVER']
+  count integer [null, note: 'Obrigatório se duration = REPEATING']
+  campaignStartsAt timestamptz [not null]
+  campaignEndsAt timestamptz [not null]
+  isActive boolean [not null, default: true]
+  externalDiscountId varchar(100)
+  createdAt timestamptz [default: `now()`]
+  updatedAt timestamptz
+  deletedAt timestamptz
+
+  indexes {
+    (priceId)
+    (isActive)
+    (campaignStartsAt, campaignEndsAt)
+  }
+
+  Note: 'Campanhas promocionais aplicáveis ao price do produto, como 10% por 12 meses ou R$ 30 na primeira cobrança.'
+}
+
+Table subscription {
+  id integer [pk, increment]
+  tenantId integer [not null, ref: - tenant.id, unique]
+
+  productId integer [not null, ref: > product.id]
+  productName varchar(100)
+
+  invoiceEmail varchar(150)
+  status varchar(30) [not null, default: 'ACTIVE']
+
+  externalCustomerId varchar(100) [unique]
+  externalSubscriptionId varchar(100) [unique]
+
+  billingCycle varchar(30) [not null, note: 'MONTHLY, YEARLY']
+  billingDay integer [note: 'Dia de faturamento do cartão ou boleto']
+  nextDueDate timestamptz
+  propertiesLimit integer [not null, default: 1, note: 'Limite contratado de condomínios/properties antes de exigir upgrade']
+  discountType varchar(20) [null]
+  discountValue integer [null]
+  unitPrice integer [not null, note: 'Valor unitário por property em centavos BRL no momento da contratação']
+  unitPriceWithDiscount integer [null, note: 'Valor unitário por property após desconto, em centavos BRL']
+  totalPrice integer [not null, note: 'Valor total da assinatura para o propertiesLimit contratado, antes de desconto']
+  totalPriceWithDiscount integer [null, note: 'Valor total da assinatura após desconto']
+
+  overdueInvoiceId integer [null]
+  overdueSince timestamptz
+  blockAt timestamptz
+
+  startsAt timestamptz
+  endsAt timestamptz
+
+  createdAt timestamptz [default: `now()`]
+  updatedAt timestamptz
+  deletedAt timestamptz
+
+  indexes {
+    tenantId [unique]
+    externalSubscriptionId [unique]
+    externalCustomerId [unique]
+    status
+    nextDueDate
+    productId
+  }
+
+  Note: 'Assinatura ativa do tenant. Guarda o snapshot comercial cobrado, incluindo ciclo, dia de faturamento, limite contratado de properties e valores finais.'
+}
+
+Table subscription_change {
+  id integer [pk, increment]
+  subscriptionId integer [ref: > subscription.id]
+  tenantId integer [ref: > tenant.id]
+
+  type varchar(30) [note: 'ONBOARD, UPGRADE, DOWNGRADE, CHURN, WINBACK']
+  reason varchar(255) [null]
+
+  changedBy varchar(255)
+
+  fromPropertiesLimit integer [null]
+  toPropertiesLimit integer [null]
+
+  fromTotalPrice integer [null]
+  toTotalPrice integer [null]
+
+  fromTotalPriceWithDiscount integer [null]
+  toTotalPriceWithDiscount integer [null]
+
+  effectiveAt timestamptz [default: `now()`]
+
+  createdAt timestamptz [default: `now()`]
+  updatedAt timestamptz
+
+  indexes {
+    subscriptionId
+    tenantId
+    effectiveAt
+    type
+  }
+
+  Note: 'Histórico de alterações da assinatura do tenant, registrando mudanças de limite de propriedades, ciclo e valores cobrados.'
+}

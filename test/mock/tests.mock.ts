@@ -4,7 +4,7 @@ import { ConfigService } from "@nestjs/config";
 
 import { type IBillingGatewayService } from "@billing/application/gateway/port/billing-gateway.port";
 import { type IDiscountRepository } from "@billing/domain/discount/port/discount.port";
-import { type IPlanRepository } from "@billing/domain/plan/port/plan.port";
+import { type IProductRepository } from "@billing/domain/product/port/product.port";
 import { type IPriceRepository } from "@billing/domain/price/port/price.port";
 import { txKey } from "@shared/domain/port/transaction.port";
 import { appConfig, type AppConfig } from "@root/app.config";
@@ -192,7 +192,7 @@ export const createBaseRepositoryMock = <T extends ObjectLiteral>(repo: Reposito
     return new TestBaseRepository(repo, cls);
 };
 
-export const createPlanRepositoryMock = (): IPlanRepository => ({
+export const createProductRepositoryMock = (): IProductRepository => ({
     findAll: vi.fn(),
     findById: vi.fn(),
     save: vi.fn(),
@@ -201,7 +201,7 @@ export const createPlanRepositoryMock = (): IPlanRepository => ({
 export const createPriceRepositoryMock = (): IPriceRepository => ({
     findAll: vi.fn(),
     findById: vi.fn(),
-    findByPlanIdAndBillingCycle: vi.fn(),
+    findByProductIdAndBillingCycle: vi.fn(),
     save: vi.fn(),
 });
 
@@ -214,10 +214,10 @@ export const createDiscountRepositoryMock = (): IDiscountRepository => ({
 });
 
 export const createBillingGatewayServiceMock = (): IBillingGatewayService => ({
-    syncPlan: vi.fn(),
+    syncProduct: vi.fn(),
     syncPrice: vi.fn(),
     syncDiscount: vi.fn(),
-    deactivatePlan: vi.fn(),
+    deactivateProduct: vi.fn(),
     deactivatePrice: vi.fn(),
     deleteDiscount: vi.fn(),
 });

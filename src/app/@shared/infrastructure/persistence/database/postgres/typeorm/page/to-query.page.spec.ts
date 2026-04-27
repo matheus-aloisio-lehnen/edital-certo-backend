@@ -464,7 +464,7 @@ describe("toQuery", () => {
 
             expect(result.where).toEqual({
                 key: In(["free", "start", "pro"]),
-                name: ILike("%Plano%"),
+                name: ILike("%Produto%"),
                 prices: {
                     billingCycle: Equal("YEARLY"),
                     value: MoreThanOrEqual(1000),

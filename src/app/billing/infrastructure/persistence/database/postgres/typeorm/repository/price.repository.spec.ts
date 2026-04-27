@@ -68,7 +68,7 @@ describe("PriceRepository", () => {
         });
     });
 
-    describe("findByPlanIdAndBillingCycle", () => {
+    describe("findByProductIdAndBillingCycle", () => {
         it("should return entity when model exists", async () => {
             const model = {
                 ...MockPrice,
@@ -79,10 +79,10 @@ describe("PriceRepository", () => {
             const entity = {} as Price;
             vi.spyOn(PriceFactory, "rehydrate").mockReturnValue(entity);
 
-            const result = await sut.findByPlanIdAndBillingCycle(1, billingCycle.monthly);
+            const result = await sut.findByProductIdAndBillingCycle(1, billingCycle.monthly);
 
             expect(repo.findOne).toHaveBeenCalledWith({
-                where: { planId: 1, billingCycle: billingCycle.monthly },
+                where: { productId: 1, billingCycle: billingCycle.monthly },
                 relations: ["discounts"],
             });
             expect(result).toBe(entity);

@@ -11,7 +11,7 @@ export const deactivatePriceUsecasePort = Symbol('deactivatePriceUsecasePort');
 export interface IPriceRepository {
     findAll(params: PageParams): Promise<Page<Price>>;
     findById(id: number): Promise<Price | null>;
-    findByPlanIdAndBillingCycle(planId: number, billingCycle: BillingCycle): Promise<Price | null>;
+    findByProductIdAndBillingCycle(productId: number, billingCycle: BillingCycle): Promise<Price | null>;
     save(price: Price): Promise<Price>;
 }
 

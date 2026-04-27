@@ -2,7 +2,7 @@ import { BillingCycle } from "@billing/domain/price/constant/billing-cycle.const
 import { CreateDiscountProps } from "@billing/domain/discount/props/create-discount.props";
 
 export type CreatePriceProps = {
-    planId?: number;
+    productId?: number;
     billingCycle: BillingCycle;
     value: number;
     discount?: CreateDiscountProps;

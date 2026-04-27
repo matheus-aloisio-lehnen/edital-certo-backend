@@ -1,0 +1,721 @@
+// IDENTITY
+
+Table user {
+  id integer [pk, increment]
+
+  name varchar(200) [not null]
+  email varchar(150) [not null, unique]
+  password varchar(100) [not null]
+
+  phone varchar(40)
+  countryCode varchar(2) [default: 'BR']
+  langCode varchar(10) [not null, default: 'pt-BR']
+
+  createdAt timestamptz [default: `now()`]
+  updatedAt timestamptz [default: `now()`]
+  deletedAt timestamptz
+
+  indexes {
+    email [unique]
+    deletedAt
+    createdAt
+  }
+}
+
+Table session {
+  id uuid [pk]
+
+  userId integer [ref: > user.id, not null]
+
+  refreshToken varchar(255) [not null, unique]
+  status varchar(20) [not null, default: 'active', note: 'active, revoked, expired']
+
+  ip varchar(45)
+  userAgent text
+  device varchar(150)
+
+  expiresAt timestamptz [not null]
+  createdAt timestamptz [default: `now()`]
+  updatedAt timestamptz [default: `now()`]
+  deletedAt timestamptz
+
+  indexes {
+    userId
+    refreshToken [unique]
+    expiresAt
+    status
+    (userId, status)
+    deletedAt
+  }
+
+  Note: 'Sessão apenas de autenticação. O condomínio ativo vem do contexto da operação, não é persistido aqui.'
+}
+
+// BILLING
+
+Table product {
+  id integer [pk, increment]
+
+  name varchar(120) [not null, note: 'Nome comercial']
+  code varchar(50) [not null, unique, note: 'UNIT, STORAGE_GB']
+
+  externalProductId varchar(100) [null, note: 'ID do produto no Stripe']
+
+  isActive boolean [not null, default: true]
+
+  createdAt timestamptz [default: `now()`]
+  updatedAt timestamptz
+  deletedAt timestamptz
+
+  indexes {
+    code [unique]
+    isActive
+    deletedAt
+  }
+
+  Note: 'Produto comercial usado para lookup de preços e integração com Stripe.'
+}
+
+Table price {
+  id integer [pk, increment]
+
+  productId integer [not null, ref: > product.id, note: 'Produto dono do preço']
+
+  countryCode varchar(2) [not null, note: 'BR, PT, US']
+  currencyCode varchar(3) [not null, note: 'BRL, EUR, USD']
+
+  billingCycle varchar(30) [not null, default: 'MONTHLY', note: 'MONTHLY, YEARLY']
+  unitPrice integer [not null, note: 'Valor unitário na menor fração da moeda']
+
+  version integer [not null, default: 1]
+  isActive boolean [not null, default: true]
+
+  externalPriceId varchar(100) [null, note: 'ID do preço no Stripe']
+
+  createdAt timestamptz [default: `now()`]
+  updatedAt timestamptz
+  deletedAt timestamptz
+
+  indexes {
+    productId
+    countryCode
+    currencyCode
+    billingCycle
+    isActive
+    deletedAt
+
+    (productId, countryCode, currencyCode, billingCycle, version) [unique]
+  }
+
+  Note: 'Preço versionado por produto. UNIT cobra por apartamento. STORAGE_GB cobra por GB usado.'
+}
+
+Table subscription {
+  id integer [pk, increment]
+
+  condominiumId integer [not null]
+
+  invoiceEmail varchar(150)
+  status varchar(30) [not null, default: 'ACTIVE', note: 'ACTIVE, BLOCKED, OVERDUE, CANCELLED']
+
+  externalCustomerId varchar(100) [unique]
+  externalSubscriptionId varchar(100) [unique]
+
+  billingCycle varchar(30) [not null, note: 'MONTHLY, YEARLY']
+  billingDay integer
+  nextDueDate timestamptz
+
+  units integer [not null, note: 'Quantidade de unidades do condomínio']
+
+  priceId integer [not null, ref: > price.id]
+
+  unitPrice integer [not null, note: 'Snapshot do valor unitário no momento da contratação']
+  currencyCode varchar(3) [not null, note: 'Snapshot da moeda']
+  totalPrice integer [not null, note: 'units * unitPrice']
+
+  overdueInvoiceId integer
+  overdueSince timestamptz
+  blockAt timestamptz
+
+  startsAt timestamptz
+  endsAt timestamptz
+
+  createdAt timestamptz [default: `now()`]
+  updatedAt timestamptz
+  deletedAt timestamptz
+
+  indexes {
+    condominiumId
+    externalSubscriptionId [unique]
+    externalCustomerId [unique]
+    status
+    nextDueDate
+    priceId
+  }
+
+  Note: 'Assinatura do condomínio. Mantém snapshot imutável do preço no momento da contratação.'
+}
+
+Table invoice {
+  id integer [pk, increment]
+
+  subscriptionId integer [not null, ref: > subscription.id]
+
+  externalInvoiceId varchar(100) [not null] // Stripe invoice id
+  externalPaymentIntentId varchar(100) // opcional
+
+  status varchar(30) [not null, note: 'DRAFT, OPEN, PAID, VOID, UNCOLLECTIBLE']
+
+  amount integer [not null, note: 'Valor total em centavos']
+  currencyCode varchar(3) [not null]
+
+  dueDate timestamptz
+  paidAt timestamptz
+
+  createdAt timestamptz [default: `now()`]
+  updatedAt timestamptz
+
+  indexes {
+    externalInvoiceId [unique] // 🔑 dedup principal
+    subscriptionId
+    status
+    dueDate
+  }
+
+  Note: 'Fatura gerada pelo provedor de pagamento. Usada para deduplicação e rastreio de cobrança.'
+}
+
+// CONDOMINIUM MANAGEMENT
+
+Table condominium {
+  id integer [pk, increment]
+
+  name varchar(200) [not null]
+  document varchar(50) [unique]
+  phone varchar(40)
+  email varchar(150)
+
+  addressId integer [null, ref: > condominiumAddress.id]
+  avatarFileId integer [null, ref: > file.id]
+
+  createdAt timestamptz [default: `now()`]
+  updatedAt timestamptz
+  deletedAt timestamptz
+
+  indexes {
+    document [unique]
+    createdAt
+    deletedAt
+  }
+
+  Note: 'Condomínio pagante e unidade operacional principal do sistema.'
+}
+
+Table condominiumAddress {
+  id integer [pk, increment]
+
+  street varchar(200)
+  number varchar(20)
+  complement varchar(100)
+  neighborhood varchar(100)
+  city varchar(100)
+  state varchar(50)
+  postalCode varchar(20)
+  countryCode varchar(2) [not null, default: 'BR']
+
+  createdAt timestamptz [default: `now()`]
+  updatedAt timestamptz
+  deletedAt timestamptz
+
+  Note: 'Endereço do condomínio.'
+}
+
+Table unit {
+  id integer [pk, increment]
+
+  condominiumId integer [not null, ref: > condominium.id]
+
+  identifier varchar(50) [not null, note: 'Ex: 101, 202, Casa 03']
+  block varchar(50) [null, note: 'Ex: Bloco A, Torre 1']
+  floor varchar(20) [null]
+
+  createdAt timestamptz [default: `now()`]
+  updatedAt timestamptz
+  deletedAt timestamptz
+
+  indexes {
+    condominiumId
+    (condominiumId, identifier, block) [unique]
+    deletedAt
+  }
+
+  Note: 'Unidade do condomínio, como apartamento, casa ou sala.'
+}
+
+Table condominiumHasUser {
+  id integer [pk, increment]
+
+  condominiumId integer [not null, ref: > condominium.id]
+  userId integer [not null, note: 'ID externo do user vindo do módulo Identity.']
+
+  unitId integer [null, ref: > unit.id]
+
+  role varchar(30) [not null, note: 'MANAGER, COUNCIL, RESIDENT, STAFF']
+  createdByUserId integer [null, note: 'ID externo do user que criou o vínculo.']
+
+  createdAt timestamptz [default: `now()`]
+  updatedAt timestamptz
+  deletedAt timestamptz
+
+  indexes {
+    condominiumId
+    userId
+    unitId
+    role
+    (condominiumId, userId) [unique]
+    deletedAt
+  }
+
+  Note: 'Vínculo do usuário com o condomínio. Role e unidade pertencem ao vínculo, não ao user.'
+}
+
+// task
+// Tarefa executável exibida no painel.
+//
+// Regras:
+// - manual: nasce hoje; dueDate pode ser null, hoje ou futuro.
+// - request: nasce hoje; dueDate pode ser null, hoje ou futuro.
+// - templateJ: nasce pela CRON; dueDate = hoje; pode ser antecipada.
+// - antecipação: cria task hoje com dueDate = hoje e generationDate = data futura que está sendo coberta.
+// - atraso: completedAt = null AND dueDate < hoje.
+// - sem prazo: dueDate = null → não aparece no calendário e não atrasa.
+// - CRON evita duplicidade usando (taskTemplateId + generationDate), nunca dueDate.
+
+Table task {
+  id integer [pk, increment]
+
+  condominiumId integer [not null, ref: > condominium.id, note: 'Condomínio dono da tarefa']
+  taskTemplateId integer [null, ref: > taskTemplate.id, note: 'Preenchido quando origin = templateJ']
+  requestId integer [null, ref: > request.id, note: 'Preenchido quando origin = request']
+
+  assetId integer [null, ref: > asset.id, note: 'Ativo relacionado']
+  locationId integer [null, ref: > location.id, note: 'Local relacionado']
+
+  title varchar(200) [not null, note: 'Título da tarefa']
+  description text [null, note: 'Descrição']
+  notes text [null, note: 'Observações internas']
+
+  type varchar(30) [not null, note: 'maintenance, routine, one_off']
+  origin varchar(30) [not null, note: 'templateJ, manual, request']
+
+  dueDate date [null, note: 'Data operacional: calendário e regra de atraso']
+  generationDate date [null, note: 'Só templateJ. Data da ocorrência do template que esta task cobre']
+
+  responsibleName varchar(200) [null, note: 'Responsável']
+
+  completedBy varchar(200) [null, note: 'Quem concluiu']
+  completedAt timestamptz [null, note: 'Quando concluiu']
+
+  createdAt timestamptz [default: `now()`, note: 'Criação da task']
+  updatedAt timestamptz [null, note: 'Última atualização']
+  deletedAt timestamptz [null, note: 'Cancelamento (soft delete)']
+
+  indexes {
+    condominiumId
+    taskTemplateId
+    requestId
+    assetId
+    locationId
+
+    type
+    origin
+    dueDate
+    generationDate
+    completedAt
+    deletedAt
+
+    (condominiumId, dueDate, completedAt)
+    (condominiumId, origin, dueDate)
+
+    (taskTemplateId, generationDate) [unique]
+  }
+
+  Note: 'Ocorrência executável. Manual/request controlam prazo via dueDate. Template usa generationDate para controle de duplicidade.'
+}
+
+// taskTemplate
+// Regra de geração de tarefas recorrentes (não é tarefa executável).
+//
+// Regras:
+// - daily: gera todo dia dentro de startsAt/endsAt.
+// - weekly: gera nos dias definidos em weekDays.
+// - monthly: gera nos dias definidos em monthDays.
+// - yearly: gera em (monthDays + yearMonths).
+// - A CRON gera task com:
+//   origin = templateJ
+//   dueDate = hoje
+//   generationDate = data da ocorrência (hoje ou futura se antecipada)
+// - Antes de gerar, a CRON verifica se já existe task com:
+//   (taskTemplateId + generationDate)
+//   → se existir, não gera (evita duplicidade).
+// - Antecipação cria task hoje com generationDate futuro (reserva a ocorrência).
+
+Table taskTemplate {
+  id integer [pk, increment]
+
+  condominiumId integer [not null, ref: > condominium.id, note: 'Condomínio dono da rotina']
+
+  assetId integer [null, ref: > asset.id, note: 'Ativo padrão das tarefas geradas']
+  locationId integer [null, ref: > location.id, note: 'Local padrão das tarefas geradas']
+
+  title varchar(200) [not null, note: 'Título padrão da tarefa']
+  description text [null, note: 'Descrição padrão']
+
+  frequency varchar(30) [not null, note: 'daily, weekly, monthly, yearly']
+  weekDays varchar(30) [null, note: 'Dias da semana (1-7). Ex: 1,3,5']
+  monthDays varchar(100) [null, note: 'Dias do mês. Ex: 5,10,25']
+  yearMonths varchar(100) [null, note: 'Meses do ano. Ex: 1,3,12']
+
+  startsAt date [not null, note: 'Data de início da geração']
+  endsAt date [null, note: 'Data de fim da geração (null = sem fim)']
+
+  lastGeneratedAt timestamptz [null, note: 'Última execução da CRON neste template']
+
+  responsibleName varchar(200) [null, note: 'Responsável padrão']
+  notes text [null, note: 'Observações padrão']
+
+  isEnabled boolean [not null, default: true, note: 'Define se a rotina está ativa']
+
+  createdByUserId integer [not null, note: 'Usuário que criou']
+  updatedByUserId integer [null, note: 'Usuário que atualizou']
+
+  createdAt timestamptz [default: `now()`, note: 'Data de criação']
+  updatedAt timestamptz [null, note: 'Última atualização']
+  deletedAt timestamptz [null, note: 'Soft delete']
+
+  indexes {
+    condominiumId
+    assetId
+    locationId
+    type
+    frequency
+    startsAt
+    endsAt
+    isEnabled
+    lastGeneratedAt
+    deletedAt
+
+    (condominiumId, isEnabled, deletedAt)
+  }
+
+  Note: 'Fonte da verdade da recorrência. Nunca gera duplicado se já existir task com mesmo taskTemplateId + generationDate.'
+}
+
+
+// =========================
+// REQUEST
+// =========================
+// Chamado (card pai da conversa).
+//
+// Regras:
+// - Sempre nasce aberto.
+// - Não existe cancelamento.
+// - Finalização = completedAt preenchido.
+// - Pode ou não virar task.
+// - Conversa fica em requestMessage.
+
+Table request {
+  id integer [pk, increment]
+
+  condominiumId integer [not null, ref: > condominium.id, note: 'Condomínio dono do chamado']
+  createdByUserId integer [null, note: 'Usuário que abriu. Null se veio de integração']
+
+  assetId integer [null, ref: > asset.id, note: 'Ativo relacionado']
+  locationId integer [null, ref: > location.id, note: 'Local relacionado']
+  taskId integer [null, ref: > task.id, note: 'Task gerada a partir do chamado']
+
+  title varchar(200) [not null, note: 'Título/resumo']
+
+  channel varchar(30) [not null, default: 'app', note: 'app, whatsapp, email, api, other']
+
+  completedAt timestamptz [null, note: 'Quando foi finalizado']
+
+  createdAt timestamptz [default: `now()`, note: 'Criação']
+  updatedAt timestamptz [null, note: 'Atualização']
+  deletedAt timestamptz [null, note: 'Soft delete']
+
+  indexes {
+    condominiumId
+    createdByUserId
+    assetId
+    locationId
+    taskId
+    channel
+    completedAt
+    createdAt
+    deletedAt
+
+    (condominiumId, completedAt)
+    (condominiumId, channel, createdAt)
+  }
+
+  Note: 'Container da conversa entre morador e gestor.'
+}
+
+// =========================
+// REQUEST MESSAGE
+// =========================
+// Mensagens do chamado.
+//
+// Regras:
+// - Toda comunicação passa por aqui.
+// - senderRole define quem enviou.
+// - channel define por onde veio.
+// - content é livre (texto ou payload serializado).
+// - Arquivos ficam em requestMessageFile.
+
+Table requestMessage {
+  id integer [pk, increment]
+
+  requestId integer [not null, ref: > request.id, note: 'Chamado ao qual pertence']
+
+  senderUserId integer [null, note: 'Usuário interno, se identificado']
+  senderName varchar(200) [null, note: 'Nome exibido quando não houver usuário']
+  senderRole varchar(30) [not null, note: 'manager, council, resident']
+
+  content text [null, note: 'Conteúdo livre da mensagem (texto ou payload)']
+
+  channel varchar(20) [not null, note: 'app, email, whatsapp, api, other']
+  externalMessageId varchar(150) [null, note: 'ID da mensagem no canal externo']
+
+  createdAt timestamptz [default: `now()`, note: 'Criação']
+  updatedAt timestamptz [null, note: 'Atualização']
+  deletedAt timestamptz [null, note: 'Soft delete']
+
+  indexes {
+    requestId
+    senderUserId
+    senderRole
+    channel
+    externalMessageId
+    createdAt
+    deletedAt
+
+    (requestId, createdAt)
+  }
+
+  Note: 'Mensagem da conversa. Sem direction; o front deriva isso comparando senderUserId com o usuário atual.'
+}
+
+// =========================
+// REQUEST MESSAGE SEEN
+// =========================
+// Controle de visualização por usuário.
+
+Table requestMessageSeen {
+  id integer [pk, increment]
+
+  requestMessageId integer [not null, ref: > requestMessage.id, note: 'Mensagem']
+  userId integer [not null, note: 'Usuário que visualizou']
+
+  seenAt timestamptz [not null, default: `now()`, note: 'Quando visualizou']
+
+  indexes {
+    requestMessageId
+    userId
+    (requestMessageId, userId) [unique]
+  }
+
+  Note: 'Permite exibir "seen by" por usuário.'
+}
+
+// =========================
+// REQUEST MESSAGE FILE
+// =========================
+// Arquivos anexados à mensagem.
+
+Table requestMessageFile {
+  id integer [pk, increment]
+
+  requestMessageId integer [not null, ref: > requestMessage.id, note: 'Mensagem vinculada']
+  fileId integer [not null, ref: > file.id, note: 'Arquivo anexado']
+
+  createdAt timestamptz [default: `now()`, note: 'Criação']
+
+  indexes {
+    requestMessageId
+    fileId
+    (requestMessageId, fileId) [unique]
+  }
+
+  Note: 'Relacionamento entre mensagem e arquivo.'
+}
+
+Table file {
+  id integer [pk, increment]
+
+  storageName varchar(255) [not null]
+  fileName varchar(255) [not null]
+  mimeType varchar(255)
+  extension varchar(20)
+  path varchar(255) [not null]
+  type varchar(255) [not null]
+  url varchar(255) [not null]
+  size integer [not null]
+
+  createdAt timestamptz [default: `now()`]
+  updatedAt timestamptz
+  deletedAt timestamptz
+
+  indexes {
+    (path, storageName) [unique]
+    url [unique]
+    type
+    deletedAt
+  }
+
+  Note: 'Arquivo físico no storage. Não pertence a ninguém diretamente.'
+}
+
+Table condominiumFile {
+  id integer [pk, increment]
+
+  condominiumId integer [not null, ref: > condominium.id]
+  fileId integer [not null, ref: > file.id]
+
+  title varchar(255)
+  description text
+
+  createdAt timestamptz [default: `now()`]
+  updatedAt timestamptz
+  deletedAt timestamptz
+
+  indexes {
+    condominiumId
+    fileId
+    (condominiumId, fileId) [unique]
+    deletedAt
+  }
+
+  Note: 'Arquivo anexado diretamente ao condomínio pelo gestor de arquivos.'
+}
+
+Table unitFile {
+  id integer [pk, increment]
+
+  unitId integer [not null, ref: > unit.id]
+  fileId integer [not null, ref: > file.id]
+
+  title varchar(255)
+  description text
+
+  createdAt timestamptz [default: `now()`]
+  updatedAt timestamptz
+  deletedAt timestamptz
+
+  indexes {
+    unitId
+    fileId
+    (unitId, fileId) [unique]
+    deletedAt
+  }
+
+  Note: 'Arquivo anexado diretamente à unidade pelo gestor de arquivos.'
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Platform
+
+Table featureFlag {
+  id integer [pk, increment]
+  key varchar(100) [unique, not null]
+  isActive bool [default: false, not null]
+  created_at timestamptz [default: `now()`]
+  updated_at timestamptz [default: `now()`]
+}
+
+Table featureFlagOverride {
+  id integer [pk, increment]
+  featureFlagId integer [ref: > featureFlag.id, not null]
+  tenantId integer [not null]
+  isActive bool [not null]
+  created_at timestamptz [default: `now()`]
+  updated_at timestamptz [default: `now()`]
+
+  indexes {
+    (featureFlagId)
+    (tenantId)
+    (featureFlagId, tenantId) [unique]
+  }
+}
+
+Table changelog {
+  id integer [pk, increment]
+  version varchar(20) [not null]
+  title varchar(255) [not null]
+  html text [not null]
+  isPublished boolean [not null, default: false]
+  publishedAt timestamptz
+
+  createdAt timestamptz [default: `now()`]
+  updatedAt timestamptz [default: `now()`]
+  deletedAt timestamptz
+
+  indexes {
+    version [unique]
+    isPublished
+    publishedAt
+  }
+
+  Note: 'Registro de atualizações e novas funcionalidades do sistema'
+}
+
+Table alert {
+  id integer [pk, increment]
+  type varchar(10) [not null]
+  severity varchar(15) [not null]
+  priority integer [not null]
+  content text [not null]
+  isActive boolean [not null, default: false]
+  expiresAt timestamptz
+
+  createdAt timestamptz [default: `now()`]
+  updatedAt timestamptz [default: `now()`]
+  deletedAt timestamptz
+
+  indexes {
+    isActive
+    expiresAt
+    (isActive, expiresAt)
+  }
+
+  Note: 'Centraliza as comunicações do time com os usuários'
+}
+
+Table alertAck {
+  id integer [pk, increment]
+  userId integer [not null, ref: > user.id]
+  alertId integer [not null, ref: > alert.id]
+  readAt timestamptz [not null, default: `now()`]
+
+  createdAt timestamptz [default: `now()`]
+  updatedAt timestamptz
+
+  indexes {
+    (userId, alertId) [unique]
+  }
+
+  Note: 'Rastreio de leitura individual'
+}

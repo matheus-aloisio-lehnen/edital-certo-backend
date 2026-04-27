@@ -10,7 +10,7 @@ describe('Price', () => {
     it('constructor should create a price successfully', () => {
         const price = new Price(validPriceProps);
 
-        expect(price.planId).toBe(validPriceProps.planId);
+        expect(price.productId).toBe(validPriceProps.productId);
         expect(price.billingCycle).toBe(validPriceProps.billingCycle);
         expect(price.value).toBe(validPriceProps.value);
         expect(price.discount).toBeDefined();
@@ -19,8 +19,8 @@ describe('Price', () => {
         expect(price.externalPriceId).toBe(validPriceProps.externalPriceId);
     });
 
-    it('validate should throw error if planId is less than 1', () => {
-        expect(() => new Price({ ...validPriceProps, planId: 0 })).toThrow(AppException);
+    it('validate should throw error if productId is less than 1', () => {
+        expect(() => new Price({ ...validPriceProps, productId: 0 })).toThrow(AppException);
     });
 
     it('validate should throw error if billingCycle is missing', () => {
@@ -66,8 +66,8 @@ describe('Price', () => {
         expect(() => price.id).toThrow(AppException);
     });
 
-    it('planId getter should throw error if planId is not set', () => {
-        const price = new Price({ ...validPriceProps, planId: undefined });
-        expect(() => price.planId).toThrow(new AppException(code.pricePlanIdEmptyError, 500));
+    it('productId getter should throw error if productId is not set', () => {
+        const price = new Price({ ...validPriceProps, productId: undefined });
+        expect(() => price.productId).toThrow(new AppException(code.priceProductIdEmptyError, 500));
     });
 });

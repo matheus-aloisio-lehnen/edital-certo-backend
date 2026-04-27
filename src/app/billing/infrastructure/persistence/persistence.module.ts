@@ -2,13 +2,13 @@ import { Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
 
 import { discountRepositoryPort } from "@billing/domain/discount/port/discount.port";
-import { planRepositoryPort } from "@billing/domain/plan/port/plan.port";
+import { productRepositoryPort } from "@billing/domain/product/port/product.port";
 import { priceRepositoryPort } from "@billing/domain/price/port/price.port";
 import { DiscountModel } from "@billing/infrastructure/persistence/database/postgres/typeorm/model/discount.model";
-import { PlanModel } from "@billing/infrastructure/persistence/database/postgres/typeorm/model/plan.model";
+import { ProductModel } from "@billing/infrastructure/persistence/database/postgres/typeorm/model/product.model";
 import { PriceModel } from "@billing/infrastructure/persistence/database/postgres/typeorm/model/price.model";
 import { DiscountRepository } from "@billing/infrastructure/persistence/database/postgres/typeorm/repository/discount.repository";
-import { PlanRepository } from "@billing/infrastructure/persistence/database/postgres/typeorm/repository/plan.repository";
+import { ProductRepository } from "@billing/infrastructure/persistence/database/postgres/typeorm/repository/product.repository";
 import { PriceRepository } from "@billing/infrastructure/persistence/database/postgres/typeorm/repository/price.repository";
 import { SharedPersistenceModule } from "@shared/infrastructure/persistence/persistence.module";
 
@@ -17,21 +17,21 @@ import { SharedPersistenceModule } from "@shared/infrastructure/persistence/pers
         SharedPersistenceModule,
         TypeOrmModule.forFeature([
             DiscountModel,
-            PlanModel,
+            ProductModel,
             PriceModel,
         ]),
     ],
     providers: [
         DiscountRepository,
-        PlanRepository,
+        ProductRepository,
         PriceRepository,
         { provide: discountRepositoryPort, useExisting: DiscountRepository },
-        { provide: planRepositoryPort, useExisting: PlanRepository },
+        { provide: productRepositoryPort, useExisting: ProductRepository },
         { provide: priceRepositoryPort, useExisting: PriceRepository },
     ],
     exports: [
         discountRepositoryPort,
-        planRepositoryPort,
+        productRepositoryPort,
         priceRepositoryPort,
     ],
 })

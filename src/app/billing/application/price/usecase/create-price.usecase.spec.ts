@@ -2,41 +2,41 @@ import { describe, expect, it, vi, beforeEach, Mock } from 'vitest';
 import { AppException } from "@shared/domain/exception/app.exception";
 import { ITransactionManager } from "@shared/domain/port/transaction.port";
 import { IBillingGatewayService } from "@billing/application/gateway/port/billing-gateway.port";
-import { IPlanRepository } from "@billing/domain/plan/port/plan.port";
-import { PlanFactory } from "@billing/domain/plan/factory/plan.factory";
+import { IProductRepository } from "@billing/domain/product/port/product.port";
+import { ProductFactory } from "@billing/domain/product/factory/product.factory";
 import { Price } from "@billing/domain/price/entity/price.entity";
 import { IPriceRepository } from "@billing/domain/price/port/price.port";
 import { CreatePriceUsecase } from "@billing/application/price/usecase/create-price.usecase";
-import { createBillingGatewayServiceMock, createPlanRepositoryMock, createPriceRepositoryMock, createTransactionManagerMock } from "@mock/tests.mock";
-import { MockPlan, MockPriceInput } from "@mock/in-memory.mock";
+import { createBillingGatewayServiceMock, createProductRepositoryMock, createPriceRepositoryMock, createTransactionManagerMock } from "@mock/tests.mock";
+import { MockProduct, MockPriceInput } from "@mock/in-memory.mock";
 
 describe('CreatePriceUsecase', () => {
     let usecase: CreatePriceUsecase;
     let priceRepository: IPriceRepository;
-    let planRepository: IPlanRepository;
+    let productRepository: IProductRepository;
     let transactionManager: ITransactionManager;
     let billingGatewayService: IBillingGatewayService;
 
     beforeEach(() => {
         priceRepository = createPriceRepositoryMock();
-        planRepository = createPlanRepositoryMock();
+        productRepository = createProductRepositoryMock();
         transactionManager = createTransactionManagerMock();
         billingGatewayService = createBillingGatewayServiceMock();
 
         usecase = new CreatePriceUsecase(
             priceRepository,
-            planRepository,
+            productRepository,
             transactionManager,
             billingGatewayService,
         );
     });
 
-    const plan = PlanFactory.rehydrate({ ...MockPlan, externalPlanId: 'ext-123' });
+    const product = ProductFactory.rehydrate({ ...MockProduct, externalProductId: 'ext-123' });
 
     it('create should create and sync a new price', async () => {
-        const input = { ...MockPriceInput, planId: 1 };
-        (planRepository.findById as Mock).mockResolvedValue(plan);
-        (priceRepository.findByPlanIdAndBillingCycle as Mock).mockResolvedValue(null);
+        const input = { ...MockPriceInput, productId: 1 };
+        (productRepository.findById as Mock).mockResolvedValue(product);
+        (priceRepository.findByProductIdAndBillingCycle as Mock).mockResolvedValue(null);
         (priceRepository.save as Mock).mockImplementation((p) => {
             Object.assign(p, { _id: 1 });
             if (p.discount) Object.assign(p.discount, { _id: 1, _priceId: 1 });
@@ -50,17 +50,17 @@ describe('CreatePriceUsecase', () => {
         expect(priceRepository.save).toHaveBeenCalled();
     });
 
-    it('create should throw if plan not found', async () => {
-        const input = { ...MockPriceInput, planId: 999 };
-        (planRepository.findById as Mock).mockResolvedValue(null);
+    it('create should throw if product not found', async () => {
+        const input = { ...MockPriceInput, productId: 999 };
+        (productRepository.findById as Mock).mockResolvedValue(null);
         await expect(usecase.execute(input)).rejects.toThrow(AppException);
     });
 
-    it('create should throw if plan has no externalPlanId', async () => {
-        const planData = { ...MockPlan, externalPlanId: null };
-        const planWithoutExt = PlanFactory.rehydrate(planData);
-        const input = { ...MockPriceInput, planId: 1 };
-        (planRepository.findById as Mock).mockResolvedValue(planWithoutExt);
+    it('create should throw if product has no externalProductId', async () => {
+        const productData = { ...MockProduct, externalProductId: null };
+        const productWithoutExt = ProductFactory.rehydrate(productData);
+        const input = { ...MockPriceInput, productId: 1 };
+        (productRepository.findById as Mock).mockResolvedValue(productWithoutExt);
         await expect(usecase.execute(input)).rejects.toThrow(AppException);
     });
 });

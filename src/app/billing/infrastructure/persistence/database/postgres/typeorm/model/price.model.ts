@@ -7,15 +7,15 @@ import {
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from "typeorm";
-import { PlanModel } from "@billing/infrastructure/persistence/database/postgres/typeorm/model/plan.model";
+import { ProductModel } from "@billing/infrastructure/persistence/database/postgres/typeorm/model/product.model";
 import { DiscountModel } from "@billing/infrastructure/persistence/database/postgres/typeorm/model/discount.model";
 import { billingCycle, type BillingCycle } from "@billing/domain/price/constant/billing-cycle.constant";
 
 @Entity("price")
-@Index("pricePlanIdIndex", ["planId"])
+@Index("priceProductIdIndex", ["productId"])
 @Index("priceBillingCycleIndex", ["billingCycle"])
-@Index("pricePlanIdIsActiveIndex", ["planId", "isActive"])
-@Index("priceUniqueActiveBillingCycle", ["planId", "billingCycle"], {
+@Index("priceProductIdIsActiveIndex", ["productId", "isActive"])
+@Index("priceUniqueActiveBillingCycle", ["productId", "billingCycle"], {
     unique: true,
     where: `"isActive" = true`,
 })
@@ -25,7 +25,7 @@ export class PriceModel {
     id!: number;
 
     @Column()
-    planId!: number;
+    productId!: number;
 
     @Column({ type: "enum", enum: billingCycle })
     billingCycle!: BillingCycle;
@@ -45,8 +45,8 @@ export class PriceModel {
     @UpdateDateColumn({ type: "timestamptz" })
     updatedAt!: Date;
 
-    @ManyToOne(() => PlanModel, (plan) => plan.prices)
-    plan!: PlanModel;
+    @ManyToOne(() => ProductModel, (product) => product.prices)
+    product!: ProductModel;
 
     @OneToMany(() => DiscountModel, (discount) => discount.price, { cascade: true, eager: true, })
     discounts!: DiscountModel[];

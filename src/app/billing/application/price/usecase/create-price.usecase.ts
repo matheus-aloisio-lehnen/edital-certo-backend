@@ -2,9 +2,9 @@ import { AppException } from "@shared/domain/exception/app.exception";
 import { code } from "@shared/domain/constant/code.constant";
 import { ITransactionManager } from "@shared/domain/port/transaction.port";
 import { Price } from "@billing/domain/price/entity/price.entity";
-import { Plan } from "@billing/domain/plan/entity/plan.entity";
+import { Product } from "@billing/domain/product/entity/product.entity";
 import { PriceFactory } from "@billing/domain/price/factory/price.factory";
-import { IPlanRepository } from "@billing/domain/plan/port/plan.port";
+import { IProductRepository } from "@billing/domain/product/port/product.port";
 import { ICreatePriceUsecase, IPriceRepository } from "@billing/domain/price/port/price.port";
 import { IBillingGatewayService } from "@billing/application/gateway/port/billing-gateway.port";
 import { CreatePriceProps } from "@billing/domain/price/props/create-price.props";
@@ -13,7 +13,7 @@ export class CreatePriceUsecase implements ICreatePriceUsecase {
 
     constructor(
         private readonly priceRepository: IPriceRepository,
-        private readonly planRepository: IPlanRepository,
+        private readonly productRepository: IProductRepository,
         private readonly transactionManager: ITransactionManager,
         private readonly billingGatewayService: IBillingGatewayService,
     ) {
@@ -27,12 +27,12 @@ export class CreatePriceUsecase implements ICreatePriceUsecase {
         };
 
         return this.transactionManager.run(async () => {
-            const plan = await this.getPlan(input.planId);
+            const product = await this.getProduct(input.productId);
 
-            if (!plan.externalPlanId)
-                throw new AppException(code.planExternalIdNotFoundError, 400, `ExternalId not found in Plan with id ${plan.id} not found`);
+            if (!product.externalProductId)
+                throw new AppException(code.productExternalIdNotFoundError, 400, `ExternalId not found in Product with id ${product.id} not found`);
 
-            const existingPrice = await this.priceRepository.findByPlanIdAndBillingCycle(plan.id, input.billingCycle);
+            const existingPrice = await this.priceRepository.findByProductIdAndBillingCycle(product.id, input.billingCycle);
             if (existingPrice)
                 this.deactivateExistingPrice(existingPrice);
 
@@ -40,7 +40,7 @@ export class CreatePriceUsecase implements ICreatePriceUsecase {
                 await this.priceRepository.save(existingPrice);
 
             const price = await this.priceRepository.save(PriceFactory.create(input));
-            await this.billingGatewayService.syncPrice(plan.id, this.getExternalPlanId(plan), price);
+            await this.billingGatewayService.syncPrice(product.id, this.getExternalProductId(product), price);
 
             if (price.discount)
                 await this.billingGatewayService.syncDiscount(price.discount);
@@ -49,22 +49,22 @@ export class CreatePriceUsecase implements ICreatePriceUsecase {
         }, metadata);
     }
 
-    private async getPlan(planId?: number): Promise<Plan> {
-        if (!planId)
-            throw new AppException(code.planIdEmptyError, 400, "PlanId is required");
+    private async getProduct(productId?: number): Promise<Product> {
+        if (!productId)
+            throw new AppException(code.productIdEmptyError, 400, "ProductId is required");
 
-        const plan = await this.planRepository.findById(planId);
-        if (!plan)
-            throw new AppException(code.planNotFoundError, 404, `Plan with id ${planId} not found`);
+        const product = await this.productRepository.findById(productId);
+        if (!product)
+            throw new AppException(code.productNotFoundError, 404, `Product with id ${productId} not found`);
 
-        return plan;
+        return product;
     }
 
-    private getExternalPlanId(plan: Plan): string {
-        if (!plan.externalPlanId)
-            throw new AppException(code.planExternalIdNotFoundError, 400, `ExternalId not found in Plan with id ${plan.id} not found`);
+    private getExternalProductId(product: Product): string {
+        if (!product.externalProductId)
+            throw new AppException(code.productExternalIdNotFoundError, 400, `ExternalId not found in Product with id ${product.id} not found`);
 
-        return plan.externalPlanId;
+        return product.externalProductId;
     }
 
     private deactivateExistingPrice(price: Price): void {

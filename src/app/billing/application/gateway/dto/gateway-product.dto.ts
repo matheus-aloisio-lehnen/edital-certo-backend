@@ -1,4 +1,4 @@
-// plan response from stripe
+// product response from stripe
 export type GatewayProduct = {
     id: string;
     active: boolean;

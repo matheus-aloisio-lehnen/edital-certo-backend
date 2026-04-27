@@ -1,7 +1,7 @@
 import { currency } from "@shared/domain/type/language.type";
 import { discountDuration, discountType } from "@billing/domain/discount/constant/discount.constant";
 import { Discount } from "@billing/domain/discount/entity/discount.entity";
-import { Plan } from "@billing/domain/plan/entity/plan.entity";
+import { Product } from "@billing/domain/product/entity/product.entity";
 import { Price } from "@billing/domain/price/entity/price.entity";
 import { CreateGatewayCouponDto } from "@billing/application/gateway/dto/create-gateway-coupon.dto";
 import { CreateGatewayPriceDto } from "@billing/application/gateway/dto/create-gateway-price.dto";
@@ -18,23 +18,23 @@ export class BillingGatewayService implements IBillingGatewayService {
     ) {
     }
 
-    async syncPlan(plan: Plan): Promise<void> {
-        const externalPlanId = await this.syncExternalPlan(plan);
-        await Promise.all(plan.prices.map(price => this.syncPrice(plan.id, externalPlanId, price)));
+    async syncProduct(product: Product): Promise<void> {
+        const externalProductId = await this.syncExternalProduct(product);
+        await Promise.all(product.prices.map(price => this.syncPrice(product.id, externalProductId, price)));
     }
 
-    async syncPrice(planId: number, externalPlanId: string, price: Price): Promise<void> {
+    async syncPrice(productId: number, externalProductId: string, price: Price): Promise<void> {
         if (!price.externalPriceId) {
             const dto: CreateGatewayPriceDto = {
                 currency: toGatewayCurrency(currency.brl),
                 active: price.isActive,
-                product: externalPlanId,
+                product: externalProductId,
                 recurring: {
                     interval: toGatewayRecurringInterval(price.billingCycle),
                 },
                 unit_amount: price.value,
                 metadata: {
-                    planId: String(planId),
+                    productId: String(productId),
                     priceId: String(price.id),
                     billingCycle: price.billingCycle,
                 },
@@ -76,12 +76,12 @@ export class BillingGatewayService implements IBillingGatewayService {
         discount.linkExternalDiscountId(createdCoupon.id);
     }
 
-    async deactivatePlan(plan: Plan): Promise<void> {
-        if (!plan.externalPlanId)
+    async deactivateProduct(product: Product): Promise<void> {
+        if (!product.externalProductId)
             return;
 
         const dto: UpdateGatewayProductDto = {
-            productId: plan.externalPlanId,
+            productId: product.externalProductId,
             active: false,
         };
 
@@ -107,29 +107,29 @@ export class BillingGatewayService implements IBillingGatewayService {
         await this.gatewayClient.deleteCoupon(discount.externalDiscountId);
     }
 
-    private async syncExternalPlan(plan: Plan): Promise<string> {
-        if (plan.externalPlanId) {
+    private async syncExternalProduct(product: Product): Promise<string> {
+        if (product.externalProductId) {
             const dto: UpdateGatewayProductDto = {
-                productId: plan.externalPlanId,
-                active: plan.isActive,
+                productId: product.externalProductId,
+                active: product.isActive,
             };
 
             await this.gatewayClient.updateProduct(dto);
 
-            return plan.externalPlanId;
+            return product.externalProductId;
         }
 
         const dto: CreateGatewayProductDto = {
-            name: plan.name,
-            active: plan.isActive,
-            statement_descriptor: plan.name,
+            name: product.name,
+            active: product.isActive,
+            statement_descriptor: product.name,
             metadata: {
-                planId: String(plan.id),
+                productId: String(product.id),
             },
         };
 
         const createdProduct = await this.gatewayClient.createProduct(dto);
-        plan.linkExternalPlanId(createdProduct.id);
+        product.linkExternalProductId(createdProduct.id);
 
         return createdProduct.id;
     }

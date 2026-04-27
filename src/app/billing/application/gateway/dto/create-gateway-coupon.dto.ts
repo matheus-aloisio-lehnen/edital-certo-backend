@@ -7,5 +7,5 @@ export type CreateGatewayCouponDto = {
     percent_off?: number;
     amount_off?: number;
     currency?: string;
-    metadata?: Record<string, string>; //discount.model.ts id, planid, priice id
+    metadata?: Record<string, string>; // discount.model.ts id, productId, price id
 };

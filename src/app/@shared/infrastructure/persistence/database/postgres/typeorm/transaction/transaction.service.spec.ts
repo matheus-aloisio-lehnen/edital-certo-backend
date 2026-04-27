@@ -110,12 +110,12 @@ describe('TransactionManager', () => {
 
     it('run should Scenario 5 — custom context: use metadata.name in components', async () => {
         const fn = vi.fn().mockResolvedValue('ok');
-        const metadata = { name: 'CreatePlan' };
+        const metadata = { name: 'CreateProduct' };
 
         await transactionManager.run(fn, metadata);
 
-        expect(tracer.start).toHaveBeenCalledWith('CreatePlan', undefined);
-        expect(metrics.increment).toHaveBeenCalledWith('CreatePlan.success', undefined);
+        expect(tracer.start).toHaveBeenCalledWith('CreateProduct', undefined);
+        expect(metrics.increment).toHaveBeenCalledWith('CreateProduct.success', undefined);
     });
 
     it('run should validate basic execution order', async () => {

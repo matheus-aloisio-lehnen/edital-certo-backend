@@ -7,7 +7,7 @@ import { GatewayProduct } from "@billing/application/gateway/dto/gateway-product
 import { GatewayPrice } from "@billing/application/gateway/dto/gateway-price.dto";
 import { Price } from "@billing/domain/price/entity/price.entity";
 import { Discount } from "@billing/domain/discount/entity/discount.entity";
-import { Plan } from "@billing/domain/plan/entity/plan.entity";
+import { Product } from "@billing/domain/product/entity/product.entity";
 import { GatewayCoupon } from "@billing/application/gateway/dto/gateway-coupon.dto";
 
 export const billingGatewayClientPort = Symbol('billingGatewayClientPort');
@@ -23,10 +23,10 @@ export interface IBillingGatewayClient {
 }
 
 export interface IBillingGatewayService {
-    syncPlan(plan: Plan): Promise<void>;
-    syncPrice(planId: number, externalPlanId: string, price: Price): Promise<void>;
+    syncProduct(product: Product): Promise<void>;
+    syncPrice(productId: number, externalProductId: string, price: Price): Promise<void>;
     syncDiscount(discount: Discount): Promise<void>;
-    deactivatePlan(plan: Plan): Promise<void>;
+    deactivateProduct(product: Product): Promise<void>;
     deactivatePrice(price: Price): Promise<void>;
     deleteDiscount(discount: Discount): Promise<void>;
 }

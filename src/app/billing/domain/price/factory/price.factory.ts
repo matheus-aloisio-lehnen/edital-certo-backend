@@ -19,7 +19,7 @@ export class PriceFactory {
 
         Object.assign(price, {
             _id: model.id,
-            _planId: model.planId,
+            _productId: model.productId,
             _billingCycle: model.billingCycle,
             _value: model.value,
             _externalPriceId: model.externalPriceId,
@@ -42,7 +42,7 @@ export class PriceFactory {
         const result = new PriceModel();
 
         result.id = price.id;
-        result.planId = price.planId;
+        result.productId = price.productId;
         result.billingCycle = price.billingCycle;
         result.value = price.value;
         result.isActive = price.isActive;

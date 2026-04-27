@@ -37,7 +37,7 @@ describe("registerPrototypes", () => {
         expect("   ".isBlank()).toBe(true);
         expect("  matheus".capitalize()).toBe("Matheus");
         expect("ação".stripAccents()).toBe("acao");
-        expect(" Plano Start ".toSlug()).toBe("plano-start");
+        expect(" Produto Start ".toSlug()).toBe("produto-start");
         expect("<b>bold</b>".removeHtml()).toBe("bold");
         expect("abcdef".truncate(3)).toBe("abc...");
         expect("abc".truncate(3)).toBe("abc");

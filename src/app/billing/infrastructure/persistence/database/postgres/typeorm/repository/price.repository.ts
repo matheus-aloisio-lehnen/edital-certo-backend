@@ -46,9 +46,9 @@ export class PriceRepository extends BaseRepository<PriceModel> implements IPric
         return model ? PriceFactory.rehydrate(model) : null;
     }
 
-    async findByPlanIdAndBillingCycle(planId: number, billingCycle: BillingCycle): Promise<Price | null> {
+    async findByProductIdAndBillingCycle(productId: number, billingCycle: BillingCycle): Promise<Price | null> {
         const model = await this.repository.findOne({
-            where: { planId, billingCycle },
+            where: { productId, billingCycle },
             relations: ["discounts"]
         });
         return model

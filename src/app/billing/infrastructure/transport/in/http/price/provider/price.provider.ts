@@ -1,5 +1,5 @@
 import { billingGatewayServicePort, type IBillingGatewayService } from "@billing/application/gateway/port/billing-gateway.port";
-import { type IPlanRepository, planRepositoryPort } from "@billing/domain/plan/port/plan.port";
+import { type IProductRepository, productRepositoryPort } from "@billing/domain/product/port/product.port";
 import { createPriceUsecasePort, deactivatePriceUsecasePort, findPriceUsecasePort, type IPriceRepository, priceRepositoryPort } from "@billing/domain/price/port/price.port";
 import { CreatePriceUsecase } from "@billing/application/price/usecase/create-price.usecase";
 import { DeactivatePriceUsecase } from "@billing/application/price/usecase/deactivate-price.usecase";
@@ -10,8 +10,8 @@ import { type ITransactionManager, transactionPort } from "@shared/domain/port/t
 export const priceProviders = [
     {
         provide: createPriceUsecasePort,
-        useFactory: (priceRepository: IPriceRepository, planRepository: IPlanRepository, transactionManager: ITransactionManager, billingGatewayService: IBillingGatewayService,) => new CreatePriceUsecase(priceRepository, planRepository, transactionManager, billingGatewayService),
-        inject: [priceRepositoryPort, planRepositoryPort, transactionPort, billingGatewayServicePort],
+        useFactory: (priceRepository: IPriceRepository, productRepository: IProductRepository, transactionManager: ITransactionManager, billingGatewayService: IBillingGatewayService,) => new CreatePriceUsecase(priceRepository, productRepository, transactionManager, billingGatewayService),
+        inject: [priceRepositoryPort, productRepositoryPort, transactionPort, billingGatewayServicePort],
     },
     {
         provide: findPriceUsecasePort,

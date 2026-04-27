@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, Mock } from "vitest";
 import { createBillingGatewayClientMock } from "@mock/tests.mock";
-import { MockCreatePlans, MockPlan } from "@mock/in-memory.mock";
+import { MockCreateProducts, MockProduct } from "@mock/in-memory.mock";
 import { type IBillingGatewayClient } from "@billing/application/gateway/port/billing-gateway.port";
-import { PlanFactory } from "@billing/domain/plan/factory/plan.factory";
+import { ProductFactory } from "@billing/domain/product/factory/product.factory";
 
 import { BillingGatewayService } from "./billing-gateway.service";
 
@@ -15,10 +15,10 @@ describe("BillingGatewayService", () => {
         service = new BillingGatewayService(gatewayClient);
     });
 
-    it("syncPlan should sync a new plan and its prices", async () => {
-        const plan = PlanFactory.create(MockCreatePlans[1]);
-        Object.assign(plan, { _id: 1 });
-        plan.prices.forEach(p => {
+    it("syncProduct should sync a new product and its prices", async () => {
+        const product = ProductFactory.create(MockCreateProducts[1]);
+        Object.assign(product, { _id: 1 });
+        product.prices.forEach(p => {
             Object.assign(p, { _id: 1 });
             p.linkExternalPriceId(null as any);
             if (p.discount) {
@@ -26,33 +26,33 @@ describe("BillingGatewayService", () => {
                 p.discount.linkExternalDiscountId(null as any);
             }
         });
-        const price = plan.prices.find(p => !!p.discount)!;
-        plan.linkExternalPlanId(null as any);
+        const price = product.prices.find(p => !!p.discount)!;
+        product.linkExternalProductId(null as any);
 
         (gatewayClient.createProduct as Mock).mockResolvedValue({ id: "ext_prod_new" });
         (gatewayClient.createPrice as Mock).mockResolvedValue({ id: "ext_price_new" });
         (gatewayClient.updatePrice as Mock).mockResolvedValue(undefined);
         (gatewayClient.createCoupon as Mock).mockResolvedValue({ id: "ext_coupon_new" });
 
-        await service.syncPlan(plan);
+        await service.syncProduct(product);
 
         expect(gatewayClient.createProduct).toHaveBeenCalledTimes(1);
-        expect(gatewayClient.createPrice).toHaveBeenCalledTimes(plan.prices.length);
-        expect(gatewayClient.updatePrice).toHaveBeenCalledTimes(plan.prices.length);
+        expect(gatewayClient.createPrice).toHaveBeenCalledTimes(product.prices.length);
+        expect(gatewayClient.updatePrice).toHaveBeenCalledTimes(product.prices.length);
         expect(gatewayClient.createCoupon).toHaveBeenCalledTimes(1);
-        expect(plan.externalPlanId).toBe("ext_prod_new");
+        expect(product.externalProductId).toBe("ext_prod_new");
         expect(price.externalPriceId).toBe("ext_price_new");
         expect(price.discount?.externalDiscountId).toBe("ext_coupon_new");
     });
 
-    it("syncPlan should update an existing plan and its prices", async () => {
-        const plan = PlanFactory.rehydrate(MockPlan);
-        plan.linkExternalPlanId("ext_prod_existing");
+    it("syncProduct should update an existing product and its prices", async () => {
+        const product = ProductFactory.rehydrate(MockProduct);
+        product.linkExternalProductId("ext_prod_existing");
 
         (gatewayClient.updateProduct as Mock).mockResolvedValue(undefined);
         (gatewayClient.updatePrice as Mock).mockResolvedValue(undefined);
 
-        await service.syncPlan(plan);
+        await service.syncProduct(product);
 
         expect(gatewayClient.updateProduct).toHaveBeenCalledTimes(1);
         expect(gatewayClient.updateProduct).toHaveBeenCalledWith({
@@ -65,14 +65,14 @@ describe("BillingGatewayService", () => {
     });
 
     it("syncPrice should create price if externalPriceId is missing", async () => {
-        const plan = PlanFactory.rehydrate(MockPlan);
-        const price = plan.prices[0];
+        const product = ProductFactory.rehydrate(MockProduct);
+        const price = product.prices[0];
         price.linkExternalPriceId(null as any);
 
         (gatewayClient.createPrice as Mock).mockResolvedValue({ id: "new_price_id" });
         (gatewayClient.updatePrice as Mock).mockResolvedValue(undefined);
 
-        await service.syncPrice(plan.id, "ext_prod_123", price);
+        await service.syncPrice(product.id, "ext_prod_123", price);
 
         expect(gatewayClient.createPrice).toHaveBeenCalledTimes(1);
         expect(gatewayClient.updatePrice).toHaveBeenCalledTimes(1);
@@ -80,20 +80,20 @@ describe("BillingGatewayService", () => {
     });
 
     it("syncPrice should only update price if externalPriceId exists", async () => {
-        const plan = PlanFactory.rehydrate(MockPlan);
-        const price = plan.prices[0];
+        const product = ProductFactory.rehydrate(MockProduct);
+        const price = product.prices[0];
 
         (gatewayClient.updatePrice as Mock).mockResolvedValue(undefined);
 
-        await service.syncPrice(plan.id, "ext_prod_123", price);
+        await service.syncPrice(product.id, "ext_prod_123", price);
 
         expect(gatewayClient.createPrice).not.toHaveBeenCalled();
         expect(gatewayClient.updatePrice).toHaveBeenCalledTimes(1);
     });
 
     it("syncDiscount should create coupon if externalDiscountId is missing", async () => {
-        const plan = PlanFactory.create(MockCreatePlans[1]);
-        const price = plan.prices.find(p => !!p.discount)!;
+        const product = ProductFactory.create(MockCreateProducts[1]);
+        const price = product.prices.find(p => !!p.discount)!;
         const discount = price.discount!;
         Object.assign(discount, { _id: 1 });
         discount.linkExternalDiscountId(null as any);
@@ -107,8 +107,8 @@ describe("BillingGatewayService", () => {
     });
 
     it("syncDiscount should not create coupon if externalDiscountId already exists", async () => {
-        const plan = PlanFactory.create(MockCreatePlans[1]);
-        const price = plan.prices.find(p => !!p.discount)!;
+        const product = ProductFactory.create(MockCreateProducts[1]);
+        const price = product.prices.find(p => !!p.discount)!;
         const discount = price.discount!;
         Object.assign(discount, { _id: 1 });
         discount.linkExternalDiscountId("ext_coupon_existing");
@@ -120,12 +120,12 @@ describe("BillingGatewayService", () => {
         expect(gatewayClient.createCoupon).not.toHaveBeenCalled();
     });
 
-    it("deactivatePlan should call updateProduct with active false", async () => {
-        const plan = PlanFactory.rehydrate(MockPlan);
-        plan.linkExternalPlanId("ext_prod_existing");
+    it("deactivateProduct should call updateProduct with active false", async () => {
+        const product = ProductFactory.rehydrate(MockProduct);
+        product.linkExternalProductId("ext_prod_existing");
         (gatewayClient.updateProduct as Mock).mockResolvedValue(undefined);
 
-        await service.deactivatePlan(plan);
+        await service.deactivateProduct(product);
 
         expect(gatewayClient.updateProduct).toHaveBeenCalledWith({
             productId: "ext_prod_existing",
@@ -133,17 +133,17 @@ describe("BillingGatewayService", () => {
         });
     });
 
-    it("deactivatePlan should do nothing if plan has no externalPlanId", async () => {
-        const plan = PlanFactory.rehydrate({ ...MockPlan, externalPlanId: null });
+    it("deactivateProduct should do nothing if product has no externalProductId", async () => {
+        const product = ProductFactory.rehydrate({ ...MockProduct, externalProductId: null });
 
-        await service.deactivatePlan(plan);
+        await service.deactivateProduct(product);
 
         expect(gatewayClient.updateProduct).not.toHaveBeenCalled();
     });
 
     it("deactivatePrice should call updatePrice with active false", async () => {
-        const plan = PlanFactory.rehydrate(MockPlan);
-        const price = plan.prices[0];
+        const product = ProductFactory.rehydrate(MockProduct);
+        const price = product.prices[0];
         (gatewayClient.updatePrice as Mock).mockResolvedValue(undefined);
 
         await service.deactivatePrice(price);
@@ -155,8 +155,8 @@ describe("BillingGatewayService", () => {
     });
 
     it("deleteDiscount should call deleteCoupon", async () => {
-        const plan = PlanFactory.create(MockCreatePlans[1]);
-        const price = plan.prices.find(p => !!p.discount)!;
+        const product = ProductFactory.create(MockCreateProducts[1]);
+        const price = product.prices.find(p => !!p.discount)!;
         const discount = price.discount!;
         discount.linkExternalDiscountId("ext_coupon_123");
 
@@ -168,8 +168,8 @@ describe("BillingGatewayService", () => {
     });
 
     it("deleteDiscount should do nothing if discount has no externalDiscountId", async () => {
-        const plan = PlanFactory.create(MockCreatePlans[1]);
-        const price = plan.prices.find(p => !!p.discount)!;
+        const product = ProductFactory.create(MockCreateProducts[1]);
+        const price = product.prices.find(p => !!p.discount)!;
         const discount = price.discount!;
         discount.linkExternalDiscountId(null as any);
 

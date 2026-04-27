@@ -3,10 +3,10 @@ import { Module } from "@nestjs/common";
 import { ObservabilityModule } from "@shared/infrastructure/observability/observability.module";
 import { BillingPersistenceModule } from "@billing/infrastructure/persistence/persistence.module";
 import { BillingTransportOutModule } from "@billing/infrastructure/transport/out/transport-out.module";
-import { planProviders } from "@billing/infrastructure/transport/in/http/plan/provider/plan.provider";
+import { productProviders } from "@billing/infrastructure/transport/in/http/product/provider/product.provider";
 import { priceProviders } from "@billing/infrastructure/transport/in/http/price/provider/price.provider";
 import { discountProviders } from "@billing/infrastructure/transport/in/http/discount/provider/discount.provider";
-import { PlanController } from "@billing/infrastructure/transport/in/http/plan/controller/plan.controller";
+import { ProductController } from "@billing/infrastructure/transport/in/http/product/controller/product.controller";
 import { PriceController } from "@billing/infrastructure/transport/in/http/price/controller/price.controller";
 import { DiscountController } from "@billing/infrastructure/transport/in/http/discount/controller/discount.controller";
 
@@ -17,12 +17,12 @@ import { DiscountController } from "@billing/infrastructure/transport/in/http/di
         ObservabilityModule,
     ],
     controllers: [
-        PlanController,
+        ProductController,
         PriceController,
         DiscountController,
     ],
     providers: [
-        ...planProviders,
+        ...productProviders,
         ...priceProviders,
         ...discountProviders,
     ],

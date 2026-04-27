@@ -1,15 +1,15 @@
 import { billingCycle } from "@billing/domain/price/constant/billing-cycle.constant";
-import { CreatePlanProps } from "@billing/domain/plan/props/create-plan.props";
-import { PlanModel } from "@billing/infrastructure/persistence/database/postgres/typeorm/model/plan.model";
+import { CreateProductProps } from "@billing/domain/product/props/create-product.props";
+import { ProductModel } from "@billing/infrastructure/persistence/database/postgres/typeorm/model/product.model";
 import { PriceModel } from "@billing/infrastructure/persistence/database/postgres/typeorm/model/price.model";
 import { DiscountModel } from "@billing/infrastructure/persistence/database/postgres/typeorm/model/discount.model";
 import { discountDuration, discountType } from "@billing/domain/discount/constant/discount.constant";
 import { CreateDiscountProps } from "@billing/domain/discount/props/create-discount.props";
 import { CreatePriceProps } from "@billing/domain/price/props/create-price.props";
 
-export const MockCreatePlans: CreatePlanProps[] = [
+export const MockCreateProducts: CreateProductProps[] = [
     {
-        name: "Plano Free",
+        name: "Produto Free",
         prices: [
             {
                 billingCycle: billingCycle.monthly,
@@ -22,7 +22,7 @@ export const MockCreatePlans: CreatePlanProps[] = [
         ],
     },
     {
-        name: "Plano Start",
+        name: "Produto Start",
         prices: [
             {
                 billingCycle: billingCycle.monthly,
@@ -43,7 +43,7 @@ export const MockCreatePlans: CreatePlanProps[] = [
         ],
     },
     {
-        name: "Plano Pro",
+        name: "Produto Pro",
         prices: [
             {
                 billingCycle: billingCycle.monthly,
@@ -66,7 +66,7 @@ export const MockCreatePlans: CreatePlanProps[] = [
         ],
     },
     {
-        name: "Plano Teams",
+        name: "Produto Teams",
         prices: [
             {
                 billingCycle: billingCycle.monthly,
@@ -80,31 +80,31 @@ export const MockCreatePlans: CreatePlanProps[] = [
     },
 ];
 
-export const MockRehydratedPlans: PlanModel[] = MockCreatePlans.map((plan, planIndex) => {
-    const planId = planIndex + 1;
-    const model = new PlanModel();
-    model.id = planId;
-    model.name = plan.name;
+export const MockRehydratedProducts: ProductModel[] = MockCreateProducts.map((product, productIndex) => {
+    const productId = productIndex + 1;
+    const model = new ProductModel();
+    model.id = productId;
+    model.name = product.name;
     model.isActive = true;
-    model.createdAt = new Date(`2026-01-0${planId}T00:00:00.000Z`);
-    model.updatedAt = new Date(`2026-02-0${planId}T00:00:00.000Z`);
-    model.externalPlanId = null;
+    model.createdAt = new Date(`2026-01-0${productId}T00:00:00.000Z`);
+    model.updatedAt = new Date(`2026-02-0${productId}T00:00:00.000Z`);
+    model.externalProductId = null;
 
-    model.prices = plan.prices.map((price, priceIndex) => {
+    model.prices = product.prices.map((price, priceIndex) => {
         const pModel = new PriceModel();
-        pModel.id = (planIndex * 10) + priceIndex + 1;
-        pModel.planId = planId;
+        pModel.id = (productIndex * 10) + priceIndex + 1;
+        pModel.productId = productId;
         pModel.billingCycle = price.billingCycle;
         pModel.value = price.value;
         pModel.isActive = true;
         pModel.externalPriceId = null;
         pModel.createdAt = new Date(`2026-01-${String(priceIndex + 1).padStart(2, '0')}T00:00:00.000Z`);
         pModel.updatedAt = new Date(`2026-02-${String(priceIndex + 1).padStart(2, '0')}T00:00:00.000Z`);
-        pModel.plan = model;
+        pModel.product = model;
 
         if (price.discount) {
             const dModel = new DiscountModel();
-            dModel.id = (planIndex * 100) + priceIndex + 1;
+            dModel.id = (productIndex * 100) + priceIndex + 1;
             dModel.priceId = pModel.id;
             dModel.name = price.discount.name;
             dModel.value = price.discount.value;
@@ -129,7 +129,7 @@ export const MockRehydratedPlans: PlanModel[] = MockCreatePlans.map((plan, planI
     return model;
 });
 
-export const MockCreateInputPlans: CreatePlanProps[] = MockCreatePlans;
+export const MockCreateInputProducts: CreateProductProps[] = MockCreateProducts;
 
 export const MockDiscount: DiscountModel = {
     id: 1,
@@ -150,7 +150,7 @@ export const MockDiscount: DiscountModel = {
 
 export const MockPrice: PriceModel = {
     id: 1,
-    planId: 1,
+    productId: 1,
     billingCycle: billingCycle.monthly,
     value: 2999,
     discounts: [MockDiscount],
@@ -158,18 +158,18 @@ export const MockPrice: PriceModel = {
     isActive: true,
     createdAt: new Date('2026-05-01T00:00:00.000Z'),
     updatedAt: new Date('2026-05-01T00:00:00.000Z'),
-    plan: null as any,
+    product: null as any,
 } as PriceModel;
 
-export const MockPlan: PlanModel = {
+export const MockProduct: ProductModel = {
     id: 1,
-    name: "Plano Free",
+    name: "Produto Free",
     isActive: true,
-    externalPlanId: null,
+    externalProductId: null,
     prices: [MockPrice],
     createdAt: new Date('2026-05-01T00:00:00.000Z'),
     updatedAt: new Date('2026-05-01T00:00:00.000Z'),
-} as PlanModel;
+} as ProductModel;
 
 export const MockDiscountInput: CreateDiscountProps = {
     priceId: 1,
@@ -183,7 +183,7 @@ export const MockDiscountInput: CreateDiscountProps = {
 };
 
 export const MockPriceInput: CreatePriceProps = {
-    planId: 1,
+    productId: 1,
     billingCycle: billingCycle.monthly,
     value: 2999,
     externalPriceId: 'price_123',
@@ -206,7 +206,7 @@ export const MockPagination = {
     end: "2025-03-31",
     where: {
         key: { op: "in", args: ["free", "start", "pro"] },
-        name: { op: "ilike", args: "%Plano%" },
+        name: { op: "ilike", args: "%Produto%" },
         "prices.billingCycle": "YEARLY",
         "prices.value": { op: "gte", args: 1000 },
         "prices.discounts.name": { op: "ilike", args: "%OFF%" },

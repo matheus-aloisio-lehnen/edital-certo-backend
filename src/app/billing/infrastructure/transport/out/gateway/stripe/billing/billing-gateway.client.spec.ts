@@ -68,27 +68,27 @@ describe('StripeBillingGatewayClient', () => {
         stripeClient.products.create.mockResolvedValue({
             id: 'prod_1',
             active: true,
-            name: 'Plan 1',
+            name: 'Product 1',
             description: 'Desc',
         });
 
         const result = await client.createProduct({
             active: true,
-            name: 'Plan 1',
-            statement_descriptor: 'Plan 1',
-            metadata: { planId: '1' },
+            name: 'Product 1',
+            statement_descriptor: 'Product 1',
+            metadata: { productId: '1' },
         } as any);
 
         expect(stripeClient.products.create).toHaveBeenCalledWith({
             active: true,
-            name: 'Plan 1',
-            statement_descriptor: 'Plan 1',
-            metadata: { planId: '1' },
+            name: 'Product 1',
+            statement_descriptor: 'Product 1',
+            metadata: { productId: '1' },
         });
         expect(result).toEqual({
             id: 'prod_1',
             active: true,
-            name: 'Plan 1',
+            name: 'Product 1',
             description: 'Desc',
         });
     });

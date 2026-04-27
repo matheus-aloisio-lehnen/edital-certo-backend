@@ -8,7 +8,7 @@ import { hasValue } from "@shared/domain/function/has-value.function";
 export class Price {
 
     private readonly _id?: number;
-    private readonly _planId?: number;
+    private readonly _productId?: number;
     private readonly _billingCycle: BillingCycle;
     private readonly _value: number;
     private _discount?: Discount;
@@ -18,7 +18,7 @@ export class Price {
     private _updatedAt?: Date;
 
     constructor(data: CreatePriceProps) {
-        this._planId = data.planId;
+        this._productId = data.productId;
         this._billingCycle = data.billingCycle;
         this._value = data.value;
         this._discount = data.discount ? new Discount(data.discount) : undefined;
@@ -34,11 +34,11 @@ export class Price {
 
         return this._id;
     }
-    get planId(): number {
-        if (!hasValue(this._planId))
-            throw new AppException(code.pricePlanIdEmptyError, 500);
+    get productId(): number {
+        if (!hasValue(this._productId))
+            throw new AppException(code.priceProductIdEmptyError, 500);
 
-        return this._planId;
+        return this._productId;
     }
     get billingCycle() { return this._billingCycle; }
     get value() { return this._value; }
@@ -49,8 +49,8 @@ export class Price {
     get updatedAt() { return this._updatedAt; }
 
     private validate(): void {
-        if (hasValue(this._planId) && this._planId < 1)
-            throw new AppException(code.pricePlanIdInvalidError, 400);
+        if (hasValue(this._productId) && this._productId < 1)
+            throw new AppException(code.priceProductIdInvalidError, 400);
 
         if (!hasValue(this._billingCycle))
             throw new AppException(code.priceBillingCycleEmptyError, 400);
