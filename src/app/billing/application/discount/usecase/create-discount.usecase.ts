@@ -1,5 +1,4 @@
 import { AppException } from "@shared/domain/exception/app.exception";
-import { code } from "@shared/domain/constant/code.constant";
 import { ITransactionManager } from "@shared/domain/port/transaction.port";
 import { Discount } from "@billing/domain/discount/entity/discount.entity";
 import { DiscountFactory } from "@billing/domain/discount/factory/discount.factory";
@@ -7,6 +6,7 @@ import { ICreateDiscountUsecase, IDiscountRepository } from "@billing/domain/dis
 import { IBillingGatewayService } from "@billing/application/gateway/port/billing-gateway.port";
 import { IPriceRepository } from "@billing/domain/price/port/price.port";
 import { CreateDiscountProps } from "@billing/domain/discount/props/create-discount.props";
+import { code } from "@shared/domain/constant/errors.constant";
 
 export class CreateDiscountUsecase implements ICreateDiscountUsecase {
 

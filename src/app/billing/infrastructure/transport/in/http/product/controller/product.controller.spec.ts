@@ -3,7 +3,7 @@ import { HttpStatus } from "@nestjs/common";
 
 import { sortOrder } from "@shared/domain/type/page.type";
 import { ProductController } from "./product.controller";
-import { code } from "@shared/domain/constant/code.constant";
+import { code } from "@shared/domain/constant/errors.constant";
 
 describe("ProductController", () => {
     let controller: ProductController;

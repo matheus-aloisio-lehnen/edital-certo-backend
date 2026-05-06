@@ -36,7 +36,7 @@ describe('CreatePriceUsecase', () => {
     it('create should create and sync a new price', async () => {
         const input = { ...MockPriceInput, productId: 1 };
         (productRepository.findById as Mock).mockResolvedValue(product);
-        (priceRepository.findByProductIdAndBillingCycle as Mock).mockResolvedValue(null);
+        (priceRepository.findByProductIdAndCycle as Mock).mockResolvedValue(null);
         (priceRepository.save as Mock).mockImplementation((p) => {
             Object.assign(p, { _id: 1 });
             if (p.discount) Object.assign(p.discount, { _id: 1, _priceId: 1 });

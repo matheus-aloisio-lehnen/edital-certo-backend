@@ -2,7 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { httpMethod, RequestOptions, Response } from "@shared/domain/type/http.type";
 import { type ILogger, loggerPort } from "@shared/domain/port/logger.port";
 import { AppException } from "@shared/domain/exception/app.exception";
-import { code } from "@shared/domain/constant/code.constant";
+import { code } from "@shared/domain/constant/errors.constant";
 import axios, { AxiosError, AxiosInstance } from "axios";
 import { SendEmailDto } from "@shared/domain/port/email.port";
 

@@ -1,6 +1,7 @@
 import { Discount } from "@billing/domain/discount/entity/discount.entity";
 import { CreateDiscountProps } from "@billing/domain/discount/props/create-discount.props";
 import { DiscountModel } from "@billing/infrastructure/persistence/database/postgres/typeorm/model/discount.model";
+import { hasValue } from "@shared/domain/function/has-value.function";
 
 export class DiscountFactory {
 
@@ -35,8 +36,10 @@ export class DiscountFactory {
     static toModel(discount: Discount): DiscountModel {
         const model: DiscountModel = Object.create(DiscountModel.prototype);
 
-        model.id = discount.id;
-        model.priceId = discount.priceId;
+        if (hasValue(discount["_id"]))
+            model.id = discount.id;
+        if (hasValue(discount["_priceId"]))
+            model.priceId = discount.priceId;
         model.name = discount.name;
         model.type = discount.type;
         model.value = discount.value;

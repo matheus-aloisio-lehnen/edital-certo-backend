@@ -4,7 +4,7 @@ import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { createDiscountUsecasePort, deleteDiscountUsecasePort, findDiscountUsecasePort, type ICreateDiscountUsecase, type IDeleteDiscountUsecase, type IFindDiscountUsecase } from "@billing/domain/discount/port/discount.port";
 import { Discount } from "@billing/domain/discount/entity/discount.entity";
 import { CreateDiscountDto } from "@billing/infrastructure/transport/in/http/discount/dto/create-discount.dto";
-import { code } from "@shared/domain/constant/code.constant";
+import { code } from "@shared/domain/constant/errors.constant";
 import { type Page } from "@shared/domain/type/page.type";
 import { type Response } from "@shared/domain/type/http.type";
 import { PageParamsInput } from "@shared/infrastructure/transport/in/http/input/page-params.input";

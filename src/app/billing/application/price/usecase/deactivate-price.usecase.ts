@@ -1,5 +1,5 @@
 import { AppException } from "@shared/domain/exception/app.exception";
-import { code } from "@shared/domain/constant/code.constant";
+import { code } from "@shared/domain/constant/errors.constant";
 import { ITransactionManager } from "@shared/domain/port/transaction.port";
 import { Price } from "@billing/domain/price/entity/price.entity";
 import { IPriceRepository, IDeactivatePriceUsecase } from "@billing/domain/price/port/price.port";
@@ -26,7 +26,7 @@ export class DeactivatePriceUsecase implements IDeactivatePriceUsecase {
         const metadata = {
             name: "UpdatePriceUsecase.deactivate",
             data: { id },
-            metrics: { priceId: String(price.id), billingCycle: price.billingCycle },
+            metrics: { priceId: String(price.id), cycle: price.cycle },
         };
 
         price.deactivate();

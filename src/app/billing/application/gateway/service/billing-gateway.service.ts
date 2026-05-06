@@ -1,4 +1,4 @@
-import { currency } from "@shared/domain/type/language.type";
+import { languageConfig } from "@shared/domain/type/language.type";
 import { discountDuration, discountType } from "@billing/domain/discount/constant/discount.constant";
 import { Discount } from "@billing/domain/discount/entity/discount.entity";
 import { Product } from "@billing/domain/product/entity/product.entity";
@@ -20,23 +20,21 @@ export class BillingGatewayService implements IBillingGatewayService {
 
     async syncProduct(product: Product): Promise<void> {
         const externalProductId = await this.syncExternalProduct(product);
-        await Promise.all(product.prices.map(price => this.syncPrice(product.id, externalProductId, price)));
+        await Promise.all(product.prices.map(price => this.syncPrice(externalProductId, price)));
     }
 
-    async syncPrice(productId: number, externalProductId: string, price: Price): Promise<void> {
+    async syncPrice(externalProductId: string, price: Price): Promise<void> {
         if (!price.externalPriceId) {
             const dto: CreateGatewayPriceDto = {
-                currency: toGatewayCurrency(currency.brl),
+                currency: toGatewayCurrency(languageConfig.pt.currency),
                 active: price.isActive,
                 product: externalProductId,
                 recurring: {
-                    interval: toGatewayRecurringInterval(price.billingCycle),
+                    interval: toGatewayRecurringInterval(price.cycle),
                 },
                 unit_amount: price.value,
                 metadata: {
-                    productId: String(productId),
                     priceId: String(price.id),
-                    billingCycle: price.billingCycle,
                 },
             };
 
@@ -66,7 +64,7 @@ export class BillingGatewayService implements IBillingGatewayService {
             duration_in_months: discount.duration === discountDuration.repeating ? discount.count : undefined,
             percent_off: discount.type === discountType.percent ? discount.value : undefined,
             amount_off: discount.type === discountType.fixed ? discount.value : undefined,
-            currency: discount.type === discountType.fixed ? toGatewayCurrency(currency.brl) : undefined,
+            currency: discount.type === discountType.fixed ? toGatewayCurrency(languageConfig.pt.currency) : undefined,
             metadata: {
                 discountId: String(discount.id),
             },

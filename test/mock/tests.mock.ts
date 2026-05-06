@@ -201,7 +201,7 @@ export const createProductRepositoryMock = (): IProductRepository => ({
 export const createPriceRepositoryMock = (): IPriceRepository => ({
     findAll: vi.fn(),
     findById: vi.fn(),
-    findByProductIdAndBillingCycle: vi.fn(),
+    findByProductIdAndCycle: vi.fn(),
     save: vi.fn(),
 });
 

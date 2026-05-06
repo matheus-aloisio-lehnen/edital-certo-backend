@@ -8,7 +8,7 @@ import { createLoggerMock, createMetricsMock, createMockQueryRunner, createTrace
 import { TransactionManager } from "@shared/infrastructure/persistence/database/postgres/typeorm/transaction/transaction.service";
 import { txKey } from "@shared/domain/port/transaction.port";
 import { AppException } from "@shared/domain/exception/app.exception";
-import { code } from "@shared/domain/constant/code.constant";
+import { code } from "@shared/domain/constant/errors.constant";
 
 describe('TransactionManager', () => {
     let transactionManager: TransactionManager;

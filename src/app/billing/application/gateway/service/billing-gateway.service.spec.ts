@@ -72,7 +72,7 @@ describe("BillingGatewayService", () => {
         (gatewayClient.createPrice as Mock).mockResolvedValue({ id: "new_price_id" });
         (gatewayClient.updatePrice as Mock).mockResolvedValue(undefined);
 
-        await service.syncPrice(product.id, "ext_prod_123", price);
+        await service.syncPrice("ext_prod_123", price);
 
         expect(gatewayClient.createPrice).toHaveBeenCalledTimes(1);
         expect(gatewayClient.updatePrice).toHaveBeenCalledTimes(1);
@@ -85,7 +85,7 @@ describe("BillingGatewayService", () => {
 
         (gatewayClient.updatePrice as Mock).mockResolvedValue(undefined);
 
-        await service.syncPrice(product.id, "ext_prod_123", price);
+        await service.syncPrice("ext_prod_123", price);
 
         expect(gatewayClient.createPrice).not.toHaveBeenCalled();
         expect(gatewayClient.updatePrice).toHaveBeenCalledTimes(1);

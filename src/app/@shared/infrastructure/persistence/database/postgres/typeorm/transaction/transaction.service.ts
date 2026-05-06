@@ -3,7 +3,7 @@ import { Inject, Injectable } from "@nestjs/common";
 import { ClsService } from "nestjs-cls";
 import { DataSource, QueryRunner } from "typeorm";
 
-import { code } from "@shared/domain/constant/code.constant";
+import { code } from "@shared/domain/constant/errors.constant";
 import { AppException } from "@shared/domain/exception/app.exception";
 import { type ILogger, loggerPort } from "@shared/domain/port/logger.port";
 import { type IMetrics, metricsPort } from "@shared/domain/port/metrics.port";

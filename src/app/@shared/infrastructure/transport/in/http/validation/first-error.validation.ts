@@ -1,5 +1,5 @@
 import { ValidationError } from "@nestjs/common";
-import { code } from "@shared/domain/constant/code.constant";
+import { code } from "@shared/domain/constant/errors.constant";
 
 export type ResolvedValidationError = {
     code: string;

@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { HttpStatus } from "@nestjs/common";
 
-import { code } from "@shared/domain/constant/code.constant";
+import { code } from "@shared/domain/constant/errors.constant";
 import { sortOrder } from "@shared/domain/type/page.type";
 
 import { PriceController } from "./price.controller";

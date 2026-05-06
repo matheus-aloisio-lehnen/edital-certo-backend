@@ -21,7 +21,3 @@ export interface IFindProductUsecase {
 export interface ICreateProductUsecase {
     execute(input: CreateProductProps): Promise<Product>;
 }
-
-export interface IDeactivateProductUsecase {
-    execute(id: number): Promise<Product>;
-}

@@ -1,8 +1,8 @@
 import { AppException } from "@shared/domain/exception/app.exception";
-import { code } from "@shared/domain/constant/code.constant";
 import { hasValue } from "@shared/domain/function/has-value.function";
 import { discountDuration, DiscountDuration, discountType, DiscountType } from "@billing/domain/discount/constant/discount.constant";
 import { CreateDiscountProps } from "@billing/domain/discount/props/create-discount.props";
+import { code } from "@shared/domain/constant/errors.constant";
 
 
 export class Discount {

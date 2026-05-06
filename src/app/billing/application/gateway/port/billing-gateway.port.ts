@@ -24,7 +24,7 @@ export interface IBillingGatewayClient {
 
 export interface IBillingGatewayService {
     syncProduct(product: Product): Promise<void>;
-    syncPrice(productId: number, externalProductId: string, price: Price): Promise<void>;
+    syncPrice(externalProductId: string, price: Price): Promise<void>;
     syncDiscount(discount: Discount): Promise<void>;
     deactivateProduct(product: Product): Promise<void>;
     deactivatePrice(price: Price): Promise<void>;

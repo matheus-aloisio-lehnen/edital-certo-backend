@@ -3,7 +3,7 @@ import { ConfigService } from "@nestjs/config";
 import { type Channel, type ChannelModel, connect } from "amqplib";
 
 import { type AppConfig, appConfig } from "@root/app.config";
-import { code } from "@shared/domain/constant/code.constant";
+import { code } from "@shared/domain/constant/errors.constant";
 import { AppException } from "@shared/domain/exception/app.exception";
 import { type IQueue, type QueueInput } from "@shared/domain/port/queue.port";
 

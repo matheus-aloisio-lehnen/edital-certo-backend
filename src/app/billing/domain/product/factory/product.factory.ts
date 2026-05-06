@@ -18,11 +18,13 @@ export class ProductFactory {
         Object.assign(product, {
             _id: model.id,
             _name: model.name,
+            _kind: model.kind,
             _isActive: model.isActive,
             _externalProductId: model.externalProductId,
             _prices: model.prices ? PriceFactory.rehydrateBulk(model.prices) : [],
             _createdAt: model.createdAt,
             _updatedAt: model.updatedAt,
+            _deletedAt: model.deletedAt ?? null,
         });
         return product;
     }
@@ -34,8 +36,8 @@ export class ProductFactory {
     static toModel(product: Product): ProductModel {
         const model: ProductModel = Object.create(ProductModel.prototype) as ProductModel;
 
-        model.id = product.id;
         model.name = product.name;
+        model.kind = product.kind;
         model.isActive = product.isActive;
         model.externalProductId = product.externalProductId ?? null;
         model.prices = product.prices.map(price => PriceFactory.toModel(price));

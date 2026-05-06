@@ -1,5 +1,5 @@
 import { type Currency } from "@shared/domain/type/language.type";
-import { code } from "@shared/domain/constant/code.constant";
+import { code } from "@shared/domain/constant/errors.constant";
 import { AppException } from "@shared/domain/exception/app.exception";
 
 export class Money {

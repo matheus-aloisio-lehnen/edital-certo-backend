@@ -4,7 +4,7 @@ import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { Product } from "@billing/domain/product/entity/product.entity";
 import { createProductUsecasePort, findProductUsecasePort, type ICreateProductUsecase, type IFindProductUsecase } from "@billing/domain/product/port/product.port";
 import { CreateProductDto } from "@billing/infrastructure/transport/in/http/product/dto/create-product.dto";
-import { code } from "@shared/domain/constant/code.constant";
+import { code } from "@shared/domain/constant/errors.constant";
 import { type Page } from "@shared/domain/type/page.type";
 import { type Response } from "@shared/domain/type/http.type";
 import { PageParamsInput } from "@shared/infrastructure/transport/in/http/input/page-params.input";

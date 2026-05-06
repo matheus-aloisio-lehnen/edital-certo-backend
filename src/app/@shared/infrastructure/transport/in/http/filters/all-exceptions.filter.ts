@@ -2,7 +2,7 @@ import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus, Injec
 import { Request, Response as ExpressResponse } from "express";
 import { Response } from "@shared/domain/type/http.type";
 import { AppException } from "@shared/domain/exception/app.exception";
-import { code } from "@shared/domain/constant/code.constant";
+import { code } from "@shared/domain/constant/errors.constant";
 import { type ILogger, loggerPort } from "@shared/domain/port/logger.port";
 import { type IMetrics, metricsPort } from "@shared/domain/port/metrics.port";
 import { type ITracer, tracerPort } from "@shared/domain/port/tracer.port";

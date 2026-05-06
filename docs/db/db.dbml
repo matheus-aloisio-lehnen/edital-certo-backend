@@ -8,8 +8,6 @@ Table user {
   password varchar(100) [not null]
 
   phone varchar(40)
-  countryCode varchar(2) [default: 'BR']
-  langCode varchar(10) [not null, default: 'pt-BR']
 
   createdAt timestamptz [default: `now()`]
   updatedAt timestamptz [default: `now()`]
@@ -56,8 +54,8 @@ Table session {
 Table product {
   id integer [pk, increment]
 
-  name varchar(120) [not null, note: 'Nome comercial']
-  code varchar(50) [not null, unique, note: 'UNIT, STORAGE_GB']
+  name varchar(120) [not null, note: 'Nome exibido do produto']
+  kind varchar(50) [not null, unique, note: 'TASK_MANAGER, STORAGE_GB']
 
   externalProductId varchar(100) [null, note: 'ID do produto no Stripe']
 
@@ -68,78 +66,85 @@ Table product {
   deletedAt timestamptz
 
   indexes {
-    code [unique]
+    kind [unique]
     isActive
     deletedAt
   }
 
-  Note: 'Produto comercial usado para lookup de preços e integração com Stripe.'
+  Note: 'Produto cobrável do catálogo. SYSTEM representa a assinatura principal; STORAGE_GB representa o armazenamento por uso.'
 }
 
 Table price {
   id integer [pk, increment]
-
   productId integer [not null, ref: > product.id, note: 'Produto dono do preço']
-
-  countryCode varchar(2) [not null, note: 'BR, PT, US']
-  currencyCode varchar(3) [not null, note: 'BRL, EUR, USD']
-
-  billingCycle varchar(30) [not null, default: 'MONTHLY', note: 'MONTHLY, YEARLY']
-  unitPrice integer [not null, note: 'Valor unitário na menor fração da moeda']
-
+  cycle varchar(30) [not null, default: 'MONTHLY', note: 'MONTHLY, YEARLY']
+  type varchar(30) [not null, note: 'LICENSED, METERED'] // metered é usado para cobrar por uso.
+  value integer [not null, note: 'Valor unitário em centavos']
   version integer [not null, default: 1]
-  isActive boolean [not null, default: true]
-
   externalPriceId varchar(100) [null, note: 'ID do preço no Stripe']
-
+  isActive bool [not null]
   createdAt timestamptz [default: `now()`]
   updatedAt timestamptz
   deletedAt timestamptz
 
   indexes {
     productId
-    countryCode
-    currencyCode
-    billingCycle
-    isActive
+    cycle
+    category
     deletedAt
-
-    (productId, countryCode, currencyCode, billingCycle, version) [unique]
+    (productId, cycle, version) [unique]
   }
 
-  Note: 'Preço versionado por produto. UNIT cobra por apartamento. STORAGE_GB cobra por GB usado.'
+  Note: 'Preço versionado por produto. CATALOG aparece no catálogo; NEGOTIATED é usado para negociação comercial, incluindo casos gratuitos para parceiros. SYSTEM cobra a assinatura principal; STORAGE_GB cobra por GB usado.'
+}
+
+Table discount {
+  id integer [pk, increment]
+
+  priceId integer [not null, ref: > price.id, note: 'Preço ao qual o desconto pertence']
+
+  name varchar(120) [not null, note: 'Nome interno/comercial do desconto']
+  value integer [not null, note: 'Percentual ou valor fixo em centavos, conforme type']
+  type varchar(20) [not null, note: 'PERCENT, FIXED']
+  duration varchar(20) [not null, note: 'ONCE, REPEATING, FOREVER']
+  count integer [null, note: 'Obrigatório quando duration = REPEATING']
+
+  campaignStartsAt timestamptz [not null]
+  campaignEndsAt timestamptz [not null]
+
+  externalDiscountId varchar(100) [null, note: 'ID externo do desconto/cupom no Stripe']
+
+  createdAt timestamptz [default: `now()`]
+  updatedAt timestamptz
+  deletedAt timestamptz
+
+  indexes {
+    priceId
+    type
+    duration
+    campaignStartsAt
+    campaignEndsAt
+    deletedAt
+  }
+
+  Note: 'Desconto aplicável a um preço. Pode ser percentual ou valor fixo, com duração única, recorrente por N ciclos ou permanente.'
 }
 
 Table subscription {
   id integer [pk, increment]
-
+  priceId integer [not null, ref: > price.id]
   condominiumId integer [not null]
-
-  invoiceEmail varchar(150)
-  status varchar(30) [not null, default: 'ACTIVE', note: 'ACTIVE, BLOCKED, OVERDUE, CANCELLED']
-
   externalCustomerId varchar(100) [unique]
   externalSubscriptionId varchar(100) [unique]
-
-  billingCycle varchar(30) [not null, note: 'MONTHLY, YEARLY']
+  invoiceEmail varchar(150)
+  paymentMethod varchar(255) [not null, default: 'BOLETO', note: 'CREDIT_CARD, BOLETO']
+  status varchar(30) [not null, default: 'ACTIVE', note: 'ACTIVE, SUSPENDED, OVERDUE, CANCELLED']
   billingDay integer
-  nextDueDate timestamptz
-
   units integer [not null, note: 'Quantidade de unidades do condomínio']
-
-  priceId integer [not null, ref: > price.id]
-
-  unitPrice integer [not null, note: 'Snapshot do valor unitário no momento da contratação']
-  currencyCode varchar(3) [not null, note: 'Snapshot da moeda']
-  totalPrice integer [not null, note: 'units * unitPrice']
-
   overdueInvoiceId integer
   overdueSince timestamptz
-  blockAt timestamptz
-
   startsAt timestamptz
   endsAt timestamptz
-
   createdAt timestamptz [default: `now()`]
   updatedAt timestamptz
   deletedAt timestamptz
@@ -149,11 +154,10 @@ Table subscription {
     externalSubscriptionId [unique]
     externalCustomerId [unique]
     status
-    nextDueDate
     priceId
   }
 
-  Note: 'Assinatura do condomínio. Mantém snapshot imutável do preço no momento da contratação.'
+  Note: 'Assinatura do condomínio. O priceId aponta para um preço versionado e imutável, servindo como referência contratada da cobrança.'
 }
 
 Table invoice {
@@ -167,7 +171,6 @@ Table invoice {
   status varchar(30) [not null, note: 'DRAFT, OPEN, PAID, VOID, UNCOLLECTIBLE']
 
   amount integer [not null, note: 'Valor total em centavos']
-  currencyCode varchar(3) [not null]
 
   dueDate timestamptz
   paidAt timestamptz
@@ -221,7 +224,6 @@ Table condominiumAddress {
   city varchar(100)
   state varchar(50)
   postalCode varchar(20)
-  countryCode varchar(2) [not null, default: 'BR']
 
   createdAt timestamptz [default: `now()`]
   updatedAt timestamptz
@@ -285,31 +287,27 @@ Table condominiumHasUser {
 // Regras:
 // - manual: nasce hoje; dueDate pode ser null, hoje ou futuro.
 // - request: nasce hoje; dueDate pode ser null, hoje ou futuro.
-// - templateJ: nasce pela CRON; dueDate = hoje; pode ser antecipada.
-// - antecipação: cria task hoje com dueDate = hoje e generationDate = data futura que está sendo coberta.
+// - schedule: nasce pela CRON; dueDate = data operacional definida para a task.
+// - antecipação: cria task antes da data prevista, e o controle da recorrência fica em taskScheduleCheckpoint.
 // - atraso: completedAt = null AND dueDate < hoje.
 // - sem prazo: dueDate = null → não aparece no calendário e não atrasa.
-// - CRON evita duplicidade usando (taskTemplateId + generationDate), nunca dueDate.
+// - CRON evita duplicidade consultando taskScheduleCheckpoint, nunca dueDate.
 
 Table task {
   id integer [pk, increment]
 
   condominiumId integer [not null, ref: > condominium.id, note: 'Condomínio dono da tarefa']
-  taskTemplateId integer [null, ref: > taskTemplate.id, note: 'Preenchido quando origin = templateJ']
+  taskScheduleId integer [null, ref: > taskSchedule.id, note: 'Preenchido quando origin = schedule']
   requestId integer [null, ref: > request.id, note: 'Preenchido quando origin = request']
-
-  assetId integer [null, ref: > asset.id, note: 'Ativo relacionado']
-  locationId integer [null, ref: > location.id, note: 'Local relacionado']
 
   title varchar(200) [not null, note: 'Título da tarefa']
   description text [null, note: 'Descrição']
   notes text [null, note: 'Observações internas']
 
   type varchar(30) [not null, note: 'maintenance, routine, one_off']
-  origin varchar(30) [not null, note: 'templateJ, manual, request']
+  origin varchar(30) [not null, note: 'schedule, manual, request']
 
   dueDate date [null, note: 'Data operacional: calendário e regra de atraso']
-  generationDate date [null, note: 'Só templateJ. Data da ocorrência do template que esta task cobre']
 
   responsibleName varchar(200) [null, note: 'Responsável']
 
@@ -322,28 +320,23 @@ Table task {
 
   indexes {
     condominiumId
-    taskTemplateId
+    taskScheduleId
     requestId
-    assetId
-    locationId
 
     type
     origin
     dueDate
-    generationDate
     completedAt
     deletedAt
 
     (condominiumId, dueDate, completedAt)
     (condominiumId, origin, dueDate)
-
-    (taskTemplateId, generationDate) [unique]
   }
 
-  Note: 'Ocorrência executável. Manual/request controlam prazo via dueDate. Template usa generationDate para controle de duplicidade.'
+  Note: 'Ocorrência executável. Manual/request controlam prazo via dueDate. Tarefas de recorrência apontam para taskSchedule.'
 }
 
-// taskTemplate
+// taskSchedule
 // Regra de geração de tarefas recorrentes (não é tarefa executável).
 //
 // Regras:
@@ -351,22 +344,16 @@ Table task {
 // - weekly: gera nos dias definidos em weekDays.
 // - monthly: gera nos dias definidos em monthDays.
 // - yearly: gera em (monthDays + yearMonths).
-// - A CRON gera task com:
-//   origin = templateJ
-//   dueDate = hoje
-//   generationDate = data da ocorrência (hoje ou futura se antecipada)
-// - Antes de gerar, a CRON verifica se já existe task com:
-//   (taskTemplateId + generationDate)
-//   → se existir, não gera (evita duplicidade).
-// - Antecipação cria task hoje com generationDate futuro (reserva a ocorrência).
+// - A CRON roda condomínio a condomínio, em uma data alvo.
+// - Antes de gerar, a CRON verifica se já existe taskScheduleCheckpoint para
+//   (taskScheduleId + scheduledDate).
+// - Se existir, não gera de novo.
+// - Antecipação registra checkpoint com status = anticipated para reservar a data futura.
 
-Table taskTemplate {
+Table taskSchedule {
   id integer [pk, increment]
 
   condominiumId integer [not null, ref: > condominium.id, note: 'Condomínio dono da rotina']
-
-  assetId integer [null, ref: > asset.id, note: 'Ativo padrão das tarefas geradas']
-  locationId integer [null, ref: > location.id, note: 'Local padrão das tarefas geradas']
 
   title varchar(200) [not null, note: 'Título padrão da tarefa']
   description text [null, note: 'Descrição padrão']
@@ -395,9 +382,6 @@ Table taskTemplate {
 
   indexes {
     condominiumId
-    assetId
-    locationId
-    type
     frequency
     startsAt
     endsAt
@@ -408,7 +392,45 @@ Table taskTemplate {
     (condominiumId, isEnabled, deletedAt)
   }
 
-  Note: 'Fonte da verdade da recorrência. Nunca gera duplicado se já existir task com mesmo taskTemplateId + generationDate.'
+  Note: 'Fonte da verdade da recorrência. A duplicidade é controlada por taskScheduleCheckpoint.'
+}
+
+// taskScheduleCheckpoint
+// Controle operacional da CRON por condomínio, schedule e data.
+//
+// Regras:
+// - Não materializa calendário futuro inteiro.
+// - Só existe quando uma data do schedule já foi consumida pelo sistema.
+// - Permite retomar processamento consultando o que já foi tratado.
+// - Se houver task, ela fica ligada aqui.
+
+Table taskScheduleCheckpoint {
+  id integer [pk, increment]
+
+  condominiumId integer [not null, ref: > condominium.id, note: 'Condomínio dono do processamento']
+  taskScheduleId integer [not null, ref: > taskSchedule.id, note: 'Regra recorrente processada']
+  taskId integer [null, ref: > task.id, note: 'Task gerada, quando existir']
+
+  scheduledDate date [not null, note: 'Data da recorrência já consumida']
+  status varchar(30) [not null, note: 'generated, anticipated, skipped']
+
+  processedAt timestamptz [not null, default: `now()`, note: 'Quando essa data foi tratada']
+  createdAt timestamptz [default: `now()`]
+  updatedAt timestamptz
+
+  indexes {
+    condominiumId
+    taskScheduleId
+    taskId
+    scheduledDate
+    status
+    processedAt
+
+    (taskScheduleId, scheduledDate) [unique]
+    (condominiumId, scheduledDate)
+  }
+
+  Note: 'Checkpoint de processamento da recorrência. Evita duplicidade e permite reexecução por condomínio/data.'
 }
 
 
@@ -430,8 +452,6 @@ Table request {
   condominiumId integer [not null, ref: > condominium.id, note: 'Condomínio dono do chamado']
   createdByUserId integer [null, note: 'Usuário que abriu. Null se veio de integração']
 
-  assetId integer [null, ref: > asset.id, note: 'Ativo relacionado']
-  locationId integer [null, ref: > location.id, note: 'Local relacionado']
   taskId integer [null, ref: > task.id, note: 'Task gerada a partir do chamado']
 
   title varchar(200) [not null, note: 'Título/resumo']
@@ -447,8 +467,6 @@ Table request {
   indexes {
     condominiumId
     createdByUserId
-    assetId
-    locationId
     taskId
     channel
     completedAt

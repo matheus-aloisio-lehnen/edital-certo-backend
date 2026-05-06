@@ -12,7 +12,7 @@ import { UpdateGatewayPriceDto } from "@billing/application/gateway/dto/update-g
 import { UpdateGatewayProductDto } from "@billing/application/gateway/dto/update-gateway-product.dto";
 import { type IBillingGatewayClient } from "@billing/application/gateway/port/billing-gateway.port";
 import { toDomainCurrency } from "@billing/application/gateway/mapper/billing-gateway.mapper";
-import { code } from "@shared/domain/constant/code.constant";
+import { code } from "@shared/domain/constant/errors.constant";
 import { AppException } from "@shared/domain/exception/app.exception";
 import { hasValue } from "@shared/domain/function/has-value.function";
 import { appConfig, type AppConfig } from "@root/app.config";

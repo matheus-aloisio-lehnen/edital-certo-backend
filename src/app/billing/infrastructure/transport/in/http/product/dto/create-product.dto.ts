@@ -16,6 +16,10 @@ export class CreateProductDto {
     @IsNotEmpty()
     name: string;
 
+    @IsString()
+    @IsNotEmpty()
+    kind: string;
+
     @IsOptional()
     @IsString()
     externalProductId?: string | null;
@@ -29,6 +33,7 @@ export class CreateProductDto {
     toProps(): CreateProductProps {
         return {
             name: this.name,
+            kind: this.kind,
             externalProductId: this.externalProductId ?? null,
             prices: this.prices.map(price => price.toProps()),
         };

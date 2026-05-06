@@ -1,7 +1,7 @@
 import { AppException } from "@shared/domain/exception/app.exception";
-import { code } from "@shared/domain/constant/code.constant";
 import { IDeleteDiscountUsecase, IDiscountRepository } from "@billing/domain/discount/port/discount.port";
 import { ITransactionManager } from "@shared/domain/port/transaction.port";
+import { code } from "@shared/domain/constant/errors.constant";
 
 export class DeleteDiscountUsecase implements IDeleteDiscountUsecase {
 

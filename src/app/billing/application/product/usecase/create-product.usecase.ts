@@ -29,19 +29,4 @@ export class CreateProductUsecase implements ICreateProductUsecase {
         }, metadata);
     }
 
-    private async deactivateExistingProduct(product: Product): Promise<void> {
-        product.deactivate();
-
-        product.prices.forEach(price => price.deactivate());
-
-        await this.productRepository.save(product);
-
-        const pricesToDeactivate = product.prices.flatMap(price => price.externalPriceId ? [price] : []);
-        if (pricesToDeactivate.length)
-            await Promise.all(pricesToDeactivate.map(price => this.billingGatewayService.deactivatePrice(price)));
-
-        const discountsToDelete = product.prices.flatMap(price => price.discount ? [price.discount] : []);
-        if (discountsToDelete.length)
-            await Promise.all(discountsToDelete.map(discount => this.billingGatewayService.deleteDiscount(discount)));
-    }
 }

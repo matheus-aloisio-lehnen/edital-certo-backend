@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { code } from "@shared/domain/constant/code.constant";
+import { code } from "@shared/domain/constant/errors.constant";
 import { AppException } from "@shared/domain/exception/app.exception";
-import { currency } from "@shared/domain/type/language.type";
+import { languageConfig } from "@shared/domain/type/language.type";
 import { Money } from "@shared/domain/value-object/money.value-object";
 
-const BRL = currency.brl;
-const USD = currency.usd;
+const BRL = languageConfig.pt.currency;
+const USD = languageConfig.en.currency;
 
 describe("Money", () => {
     it("fromInteger should create money from cents", () => {

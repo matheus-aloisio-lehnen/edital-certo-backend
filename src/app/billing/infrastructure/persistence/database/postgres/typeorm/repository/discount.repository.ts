@@ -21,7 +21,7 @@ export class DiscountRepository extends BaseRepository<DiscountModel> implements
         cls: ClsService,
     ) {
         super(repo, cls);
-        this.allowedOrderBy = ["id", "priceId", "name", "key", "type", "duration", "campaignStartsAt", "campaignEndsAt"]
+        this.allowedOrderBy = ["id", "priceId", "name", "type", "value", "duration", "count", "campaignStartsAt", "campaignEndsAt", "externalDiscountId"];
     }
 
     async findAll(params: PageParams): Promise<Page<Discount>> {

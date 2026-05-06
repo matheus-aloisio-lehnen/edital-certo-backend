@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { discountType, discountDuration } from '@billing/domain/discount/constant/discount.constant';
 import { AppException } from '@shared/domain/exception/app.exception';
-import { code } from '@shared/domain/constant/code.constant';
 import { MockDiscountInput } from '@mock/in-memory.mock';
 import { Discount } from "@billing/domain/discount/entity/discount.entity";
+import { code } from "@shared/domain/constant/errors.constant";
 
 describe('Discount', () => {
     const validDiscountProps = MockDiscountInput;

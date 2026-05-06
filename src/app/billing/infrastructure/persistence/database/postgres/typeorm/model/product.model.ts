@@ -3,6 +3,8 @@ import { PriceModel } from "@billing/infrastructure/persistence/database/postgre
 
 @Entity("product")
 @Index("productIsActiveIndex", ["isActive"])
+@Index("productKindIndex", ["kind"], { unique: true })
+@Index("productDeletedAtIndex", ["deletedAt"])
 export class ProductModel {
 
     @PrimaryGeneratedColumn()
@@ -10,6 +12,9 @@ export class ProductModel {
 
     @Column()
     name!: string;
+
+    @Column()
+    kind!: string;
 
     @Column({ default: true })
     isActive!: boolean;
@@ -22,6 +27,9 @@ export class ProductModel {
 
     @UpdateDateColumn({ type: "timestamptz" })
     updatedAt!: Date;
+
+    @Column({ type: "timestamptz", nullable: true })
+    deletedAt!: Date | null;
 
     @OneToMany(() => PriceModel, (price) => price.product, { cascade: true, eager: true })
     prices!: PriceModel[];
